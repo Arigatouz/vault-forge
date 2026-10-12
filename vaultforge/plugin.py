@@ -45,10 +45,23 @@ def fetch_release(spec: str, dest: Path) -> str:
 
     api = "https://api.github.com/repos/%s/releases/%s" % (
         owner_repo, ("tags/" + tag) if tag else "latest")
+    # api.github.com times out intermittently from some networks (measured on this machine), so the
+    # public path retries before it gives up; a failed fallback must not read as "no such release".
+    payload = None
+    for attempt in range(1, 4):
+        try:
+            request = urllib.request.Request(api, headers={"User-Agent": "vault-forge"})
+            with urllib.request.urlopen(request, timeout=20) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            break
+        except (urllib.error.URLError, ValueError, TimeoutError) as exc:
+            errors.append("http attempt %d: %s" % (attempt, exc))
+            if attempt < 3:
+                import time
+                time.sleep(2 * attempt)
+    if payload is None:
+        util.die("could not fetch a release for %s: %s" % (owner_repo, "; ".join(errors)))
     try:
-        request = urllib.request.Request(api, headers={"User-Agent": "vault-forge"})
-        with urllib.request.urlopen(request, timeout=20) as response:
-            payload = json.loads(response.read().decode("utf-8"))
         wanted = {asset["name"]: asset["browser_download_url"]
                   for asset in payload.get("assets", [])}
         if "manifest.json" not in wanted:
@@ -63,7 +76,7 @@ def fetch_release(spec: str, dest: Path) -> str:
                 (dest / name).write_bytes(response.read())
         return "public release API"
     except (urllib.error.URLError, ValueError, TimeoutError) as exc:
-        errors.append("http: %s" % exc)
+        errors.append("http download: %s" % exc)
     util.die("could not fetch a release for %s: %s" % (owner_repo, "; ".join(errors)))
     return ""  # unreachable
 
