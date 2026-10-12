@@ -96,6 +96,27 @@ def default_source(cfg: dict, repo: Path):
     return None
 
 
+HEARTBEAT = "LOADED.txt"
+FIX_STEPS = (
+    "Settings > Community plugins > turn on community plugins, then enable the add-on. It is a "
+    "per-vault switch: turning it on in another vault does nothing for this one, and the plugin "
+    "folder plus a community-plugins.json entry are necessary but not sufficient."
+)
+
+
+def heartbeat(repo: Path, cfg: dict):
+    """The plugin writes LOADED.txt when it starts. On disk, and the only unambiguous proof it ran."""
+    path = plugin_dir(repo, cfg) / HEARTBEAT
+    if not path.exists():
+        return None
+    body = {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if ":" in line:
+            key, _, value = line.partition(":")
+            body[key.strip()] = value.strip()
+    return {"path": path, "loaded_at": body.get("loadedAt", "?"), "version": body.get("manifestVersion", "?")}
+
+
 def plugin_dir(repo: Path, cfg: dict) -> Path:
     plugin_id = (cfg.get("plugin") or {}).get("id", "agent-dispatch")
     return util.vault_path(repo, cfg) / ".obsidian" / "plugins" / plugin_id
@@ -168,6 +189,35 @@ def install(repo: Path, cfg: dict, args) -> int:
     return 0
 
 
+def doctor(repo: Path, cfg: dict) -> int:
+    """Is the add-on present AND known to have started in this vault? Exit 1 when it cannot work."""
+    dest = plugin_dir(repo, cfg)
+    plugin_id = (cfg.get("plugin") or {}).get("id", "agent-dispatch")
+    registry = util.vault_path(repo, cfg) / ".obsidian" / "community-plugins.json"
+    listed = util.read_json(registry, [])
+    files = [name for name in ("manifest.json", "main.js") if (dest / name).exists()]
+    beat = heartbeat(repo, cfg)
+
+    info("add-on:     %s" % plugin_id)
+    info("files:      %s" % (", ".join(files) if files else "MISSING (run plugin install)"))
+    info("registry:   %s" % ("listed" if plugin_id in listed else "NOT listed (%s)" % registry))
+    info("heartbeat:  %s" % ("started %s, version %s (%s)" % (
+        beat["loaded_at"], beat["version"], beat["path"].name) if beat else "never started"))
+    if not files:
+        info("")
+        info("FAIL: the add-on is not installed in this vault.")
+        return 1
+    if beat:
+        info("")
+        info("OK: the add-on is installed and has started in this vault.")
+        return 0
+    info("")
+    info("FAIL: installed but it has never started here, so Obsidian shows no ribbon icon and no")
+    info("      commands. %s" % FIX_STEPS)
+    info("      Re-run this command after enabling it: a fresh heartbeat is the proof.")
+    return 1
+
+
 def status(repo: Path, cfg: dict) -> int:
     dest = plugin_dir(repo, cfg)
     plugin_id = (cfg.get("plugin") or {}).get("id", "agent-dispatch")
@@ -179,4 +229,6 @@ def status(repo: Path, cfg: dict) -> int:
     if (dest / "main.js").exists():
         info("  main.js  %d bytes" % (dest / "main.js").stat().st_size)
     info("enabled:   %s" % ("yes" if plugin_id in listed else "no (%s)" % registry))
+    beat = heartbeat(repo, cfg)
+    info("started:   %s" % (beat["loaded_at"] if beat else "never (see: plugin doctor)"))
     return 0

@@ -127,7 +127,21 @@ def run(repo: Path, cfg: dict, strict: bool = False, quiet: bool = False) -> int
                 base_bad += 1
     checks.append(("bases", len(list(vault.rglob("*.base"))) - base_bad, base_bad))
 
-    # 6. index freshness
+    # 6. add-on heartbeat: installed but never started is the failure users actually hit
+    from . import plugin as plugin_mod
+    try:
+        beat = plugin_mod.heartbeat(repo, cfg)
+        installed = (plugin_mod.plugin_dir(repo, cfg) / "main.js").exists()
+    except Exception:
+        beat, installed = None, False
+    if installed and beat is None:
+        warnings.append("add-on installed but never started in this vault (no LOADED.txt); Obsidian "
+                        "shows no icon or commands until community plugins are on for THIS vault. "
+                        "Run: ./.vault-forge/vault-forge plugin doctor")
+    elif installed:
+        checks.append(("add-on", 1, 0))
+
+    # 7. index freshness
     index_file = vault / "index" / "vault-index.json"
     if not index_file.exists():
         warnings.append("index/vault-index.json missing; run: ./.vault-forge/vault-forge index")

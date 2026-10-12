@@ -54,6 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
                          help="owner/repo or owner/repo@tag, e.g. Arigatouz/agent-dispatch")
     install.add_argument("--id", default="")
     plugin_sub.add_parser("status")
+    plugin_sub.add_parser("doctor")
 
     p = sub.add_parser("build", help="init if needed, then scan, ingest, index and validate")
     p.add_argument("--name", default="")
@@ -137,6 +138,8 @@ def main(argv=None) -> int:
             return plugin.install(repo, cfg, args)
         if args.plugin_command == "status":
             return plugin.status(repo, cfg)
+        if args.plugin_command == "doctor":
+            return plugin.doctor(repo, cfg)
         parser.parse_args(["plugin", "--help"])
         return 2
     if args.command == "status":

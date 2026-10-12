@@ -9,7 +9,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-TOOL_VERSION = "0.3.0"
+TOOL_VERSION = "0.3.1"
 TODAY = date.today().isoformat()
 
 DEFAULT_CONFIG = {

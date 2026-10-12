@@ -163,6 +163,25 @@ printf '[\n  "fake-addon"\n]\n' > docs-vault/.obsidian/community-plugins.json
 grep -q 'fake-addon' docs-vault/.obsidian/community-plugins.json \
   && pass "init --force keeps the plugin registry" || fail "init --force keeps the plugin registry"
 
+# 8c. plugin doctor: installed but never started must fail loudly, then pass once it has
+mkdir -p docs-vault/.obsidian/plugins/fake-addon
+printf '{"id":"fake-addon","name":"Fake","version":"1.0.0","minAppVersion":"1.0.0","description":"x","author":"t","isDesktopOnly":true}\n' > docs-vault/.obsidian/plugins/fake-addon/manifest.json
+printf 'module.exports={}\n' > docs-vault/.obsidian/plugins/fake-addon/main.js
+if "$ROOT/vault-forge" plugin doctor --quiet >"$WORK/doctor1.log" 2>&1; then
+  fail "doctor fails when the add-on never started"
+else
+  pass "doctor fails when the add-on never started"
+fi
+grep -q "never started" "$WORK/doctor1.log" && pass "doctor names the heartbeat as the problem" \
+  || fail "doctor names the heartbeat as the problem"
+grep -q "per-vault switch" "$WORK/doctor1.log" && pass "doctor explains that the switch is per vault" \
+  || fail "doctor explains that the switch is per vault"
+printf 'message: fake-addon loaded\nloadedAt: 2026-01-01T00:00:00.000Z\nmanifestVersion: 1.0.0\n' > docs-vault/.obsidian/plugins/fake-addon/LOADED.txt
+"$ROOT/vault-forge" plugin doctor >"$WORK/doctor2.log" 2>&1 && pass "doctor passes once a heartbeat exists" \
+  || fail "doctor passes once a heartbeat exists"
+grep -q "2026-01-01T00:00:00.000Z" "$WORK/doctor2.log" && pass "doctor reports when it started" \
+  || fail "doctor reports when it started"
+
 # 9. final gate
 "$ROOT/vault-forge" validate >"$WORK/final.log" 2>&1 && pass "final validate exits 0" || fail "final validate exits 0"
 
