@@ -80,6 +80,7 @@
   <a href="#graph">10. Graph view</a>
   <a href="#index">11. The search index</a>
   <a href="#plugin">12. The Agent Dispatch add-on</a>
+  <a href="#blocked">12b. When a run comes back blocked</a>
   <a href="#git">13. Git rules</a>
   <a href="#daily">14. Daily workflow</a>
   <a href="#trouble">15. Troubleshooting</a>
@@ -189,7 +190,8 @@ The symptom is precise: the plugin is installed, and Obsidian shows no terminal 
 <h3>Step 7. Point the panel at your CLIs</h3>
 <p>Settings → <b>Agent Dispatch</b>: one binary path per agent (pre-filled by resolution: the settings value,
 then <code>~/.local/bin</code>, Homebrew, <code>/usr/local/bin</code>, then <code>PATH</code>), the model list
-per agent, the default sandbox, the timeout, and the working directory a run starts in. Agents must be
+per agent, the default sandbox, the timeout, and the working directory a run starts in. Two settings here
+decide whether a run can do anything at all: <b>Agent mode</b> and <b>extra args</b>, both below. Agents must be
 authenticated themselves; the panel never handles credentials. If a run fails, the card quotes the CLI's own
 words (<code>Not logged in…</code>, <code>You've hit your usage limit…</code>).</p>
 
@@ -492,8 +494,10 @@ status (<code>queued</code>, <code>running</code>, <code>done</code>, <code>erro
 <table>
 <tr><th>Agent</th><th>Mechanism</th><th>What protects the run</th></tr>
 <tr><td>Codex</td><td>OS sandbox</td><td><code>-s read-only</code> in argv</td></tr>
-<tr><td>Claude Code</td><td>Tool permissions</td><td><code>--permission-mode plan</code></td></tr>
-<tr><td>Antigravity</td><td>Tool permissions</td><td><code>--mode plan --sandbox</code></td></tr>
+<tr><td>Claude Code</td><td>Tool permissions</td><td><code>--permission-mode plan</code>, or
+<code>acceptEdits</code> when Agent mode is accept-edits</td></tr>
+<tr><td>Antigravity</td><td>Tool permissions</td><td><code>--mode plan --sandbox</code>, or
+<code>--mode accept-edits</code> when Agent mode is accept-edits</td></tr>
 <tr><td>OpenCode</td><td>None available</td><td>Nothing; the panel says <b>UNRESTRICTED</b> instead of
 pretending otherwise</td></tr>
 </table>
@@ -508,6 +512,34 @@ enable <b>Agent Dispatch</b>, and confirm the plugin started by looking for
 <code>LOADED.txt</code> next to its <code>main.js</code>. A folder on disk and an entry in
 <code>community-plugins.json</code> are necessary but not sufficient: Obsidian loads only what it considers
 enabled at launch.</div>
+
+<h3 id="blocked">When a run comes back blocked, or comes back done but empty</h3>
+<p>Measured on agy, and it applies to any CLI that gates tools behind a permission prompt. The run took
+32.5 s, exited <b>0</b>, and wrote <b>0 bytes</b> to stdout. Its stderr said:</p>
+<pre>jetski: no output produced — a tool required the "command" permission that headless mode cannot
+prompt for, so it was auto-denied. Add an allow-rule under permissions.allow in settings.json
+(e.g. command(&lt;target&gt;)). Alternatively, re-run with --dangerously-skip-permissions</pre>
+<p>That is the whole mystery: <b>a headless run has no terminal, so it cannot ask, so it denies its own
+tools.</b> In plan mode an agent still prints what it intends to do ("I will explore…", "I will list…"),
+which reads like progress and is not: no tool call was allowed and no file was touched. Nothing is broken
+in the panel; the agent was correctly blocked by its own permissions.</p>
+<ul>
+  <li><b>Frontmatter now says <code>run_status: blocked</code></b> instead of <code>done</code>, and the
+  Answer block carries the CLI's own sentence plus the way out, because an empty answer next to exit 0 was
+  how a blocked run got filed as a success.</li>
+  <li><b>To let agents act:</b> Settings → Agent Dispatch → <b>Agent mode</b> = <code>accept-edits</code>
+  (claude gets <code>--permission-mode acceptEdits</code>, agy gets <code>--mode accept-edits</code>).
+  The default stays <code>plan</code>, which refuses writes and denies tools.</li>
+  <li><b>If a CLI still refuses:</b> it needs an allow-rule of its own (agy reads
+  <code>permissions.allow</code> in its own <code>settings.json</code>) or the flags it documents for
+  unattended runs, which go in that agent's <b>extra args</b> field. Nothing is added for you: passing
+  something like <code>--dangerously-skip-permissions</code> is a decision you make, in writing, per
+  agent.</li>
+  <li><b>A question about the vault's contents is usually not an agent job.</b> "Is the vault in sync with
+  the code" is answered by <code>ingest</code> and <code>index</code>, deterministically and offline: no
+  quota, no permission prompt, no stderr. Ask an agent when the answer needs reasoning, not when it needs
+  regenerating.</li>
+</ul>
 
 <h2 id="git">13. Git rules</h2>
 <table>
@@ -543,6 +575,19 @@ config, snippets, the index, and <code>.obsidian/plugins/agent-dispatch/</code><
 </ol>
 
 <h2 id="trouble">15. Troubleshooting</h2>
+<table>
+<tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>A run says done and the Answer is empty</td><td>The CLI wrote nothing to stdout and explained itself
+on stderr. Pre-0.1.1 builds dropped that and filed the run as a success</td><td>Update the add-on
+(<code>plugin install --from-github Arigatouz/agent-dispatch@v0.1.1</code>). The note now reads
+<code>run_status: blocked</code> with the CLI's own sentence</td></tr>
+<tr><td>An agent answers with intentions ("I will…") and changes nothing</td><td>It runs in plan mode, or
+it cannot prompt for a tool permission and auto-denied</td><td>Agent mode → <code>accept-edits</code>, and
+an allow-rule for that CLI when it still refuses. Check its stderr, not its tone</td></tr>
+<tr><td>No output at all, exit 0, 0 bytes</td><td>The denial above, with nothing worth printing in plan
+mode</td><td>Same as the previous row. <code>plugin doctor</code> and the note's frontmatter both keep the
+evidence</td></tr>
+</table>
 <table>
 <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
 <tr><td>A note shows only a heading and links, no real content</td><td>It is a seeded skeleton note: your
