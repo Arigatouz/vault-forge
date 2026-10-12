@@ -515,6 +515,20 @@ enable <b>Agent Dispatch</b>, and confirm the plugin started by looking for
 <code>community-plugins.json</code> are necessary but not sufficient: Obsidian loads only what it considers
 enabled at launch.</div>
 
+<h3 id="runs">When a run exits with an error after doing the work</h3>
+<p>Measured on claude, and the cause was the caller, not the CLI. A three-step task read the file, listed the
+folder and wrote the note, then exited <b>1</b> with an empty Answer. Its stream ended with:</p>
+<pre>{"type":"result","subtype":"error_max_turns","is_error":true,"num_turns":3,"result":null}</pre>
+<p><b>The turn budget was never set, so every run got <code>--max-turns 1</code>.</b> A multi-step task cannot
+finish in one turn, so the CLI stopped at the cap and the plugin had no final text to show. Since v0.1.4
+turns are a setting (<b>Max turns per run</b>, default 12) and a run that hits the cap is recorded as
+<i>ran out of turns</i> with the CLI's own subtype, never as an empty answer. If a run shows that line, raise
+the budget and check what it actually finished.</p>
+<p>Two sibling traps from the same investigation, both fixed: the child process no longer has its
+<code>PATH</code> <b>replaced</b> outright (the dispatch directories stay first and every inherited directory is
+appended, so a CLI's hooks, credential helpers and version-managed runtimes remain reachable), and the run card
+now takes its posture from the run itself, so a workspace run can no longer be labelled <i>plan mode</i>.</p>
+
 <h3 id="blocked">When a run comes back blocked, or comes back done but empty</h3>
 <p>Measured on agy, and it applies to any CLI that gates tools behind a permission prompt. The run took
 32.5 s, exited <b>0</b>, and wrote <b>0 bytes</b> to stdout. Its stderr said:</p>
@@ -605,6 +619,9 @@ on stderr. Pre-0.1.1 builds dropped that and filed the run as a success</td><td>
 <tr><td>An agent answers with intentions ("I will…") and changes nothing</td><td>It runs in plan mode, or
 it cannot prompt for a tool permission and auto-denied</td><td>Agent mode → <code>accept-edits</code>, and
 an allow-rule for that CLI when it still refuses. Check its stderr, not its tone</td></tr>
+<tr><td>A run exits with an error, the Answer is empty, and the work was actually done</td><td>The run hit
+its turn limit (<code>error_max_turns</code>) and had no final message to return</td><td>Update to v0.1.4+: the
+note now reads <i>ran out of turns</i>. Raise <b>Max turns per run</b>, then verify what it finished</td></tr>
 <tr><td>A run says <code>refused: bypass flag</code> and never starts</td><td>Its extra args contain a
 bypass flag and Allow bypass flags is off, which is the default</td><td>Use Agent mode =
 <code>workspace</code> instead, or turn the toggle on deliberately</td></tr>
