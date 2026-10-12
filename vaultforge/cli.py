@@ -5,7 +5,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import indexer, plugin, scaffold, util, vault as vault_mod, validate as validate_mod
+from . import indexer, ingest as ingest_mod, plugin, scaffold, util, vault as vault_mod
+from . import validate as validate_mod
 from . import scan as scan_mod
 from .util import info
 
@@ -29,6 +30,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("scan", help="read the repository and seed notes from what it finds")
     p.add_argument("--force", action="store_true", help="overwrite seeded notes")
 
+    p = sub.add_parser("ingest", help="read repository documents and source code into real notes")
+    p.add_argument("--force", action="store_true", help="overwrite previously ingested notes")
+
     sub.add_parser("index", help="rebuild index/ for fast agent search")
 
     p = sub.add_parser("search", help="search the index")
@@ -51,12 +55,14 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--id", default="")
     plugin_sub.add_parser("status")
 
-    p = sub.add_parser("build", help="init if needed, then scan, index and validate")
+    p = sub.add_parser("build", help="init if needed, then scan, ingest, index and validate")
     p.add_argument("--name", default="")
     p.add_argument("--dir", default="")
     p.add_argument("--areas", default="")
     p.add_argument("--tags", default="")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--skip-ingest", action="store_true",
+                   help="metadata only: do not read the repository documents and source")
 
     sub.add_parser("status", help="what this repo has right now")
     return parser
@@ -106,6 +112,8 @@ def main(argv=None) -> int:
             scaffold.init(repo, args)
         cfg = util.load_config(repo)
         scan_mod.scan(repo, cfg, args)
+        if not getattr(args, "skip_ingest", False):
+            ingest_mod.ingest(repo, cfg, args)
         indexer.build(repo, cfg)
         return validate_mod.run(repo, cfg, strict=False, quiet=False)
 
@@ -115,6 +123,8 @@ def main(argv=None) -> int:
 
     if args.command == "scan":
         return scan_mod.scan(repo, cfg, args)
+    if args.command == "ingest":
+        return ingest_mod.ingest(repo, cfg, args)
     if args.command == "index":
         return indexer.build(repo, cfg)
     if args.command == "search":

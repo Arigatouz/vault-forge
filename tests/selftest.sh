@@ -114,6 +114,32 @@ grep -q "obj/Debug\|bin/Debug" "docs-vault/03-Resources/Codebase Map.md" && fail
   || pass "build output stays out of the map"
 cd "$WORK/demo-app"
 
+# 7c. ingest: repository docs and source become real notes, dependencies stay out
+ING="$WORK/ingest-app"
+mkdir -p "$ING/docs" "$ING/src/App" "$ING/node_modules/some-package"
+printf '# Ingest App\n\nA fixture with a doc and some code.\n' > "$ING/README.md"
+printf '# Architecture\n\nLayers and boundaries.\n\n## Data model\n\nTenant, course and lesson rows.\n\n## Streaming\n\nServer-sent events carry tutor tokens.\n' > "$ING/docs/01-architecture.md"
+printf 'public class CourseService {\n  public void Enrol() { }\n}\n' > "$ING/src/App/CourseService.cs"
+printf 'export class LessonList {\n  load(): void { }\n}\n' > "$ING/src/App/lesson-list.ts"
+printf 'export class ShouldNeverAppear { }\n' > "$ING/node_modules/some-package/index.ts"
+cd "$ING" && git init -q . && git -c user.email=t@e.com -c user.name=t commit -q --allow-empty -m "chore: init"
+"$ROOT/vault-forge" build >"$WORK/ingest.log" 2>&1 || fail "ingest fixture build"
+[ -f "docs-vault/03-Resources/Repo Docs/01 Architecture.md" ] && pass "repo doc ingested as a note" \
+  || fail "repo doc ingested as a note"
+grep -q "Tenant, course and lesson rows" "docs-vault/03-Resources/Repo Docs/01 Architecture.md" \
+  && pass "ingested doc carries real section text" || fail "ingested doc carries real section text"
+grep -q "_source: \`docs/01-architecture.md\` lines" "docs-vault/03-Resources/Repo Docs/01 Architecture.md" \
+  && pass "ingested doc cites its source line range" || fail "ingested doc cites its source line range"
+[ -f "docs-vault/03-Resources/Code Outline/src-App outline.md" ] && pass "code outline note written per module" \
+  || fail "code outline note written per module"
+grep -q "CourseService" "docs-vault/03-Resources/Code Outline/src-App outline.md" \
+  && pass "code outline lists declarations" || fail "code outline lists declarations"
+grep -q "ShouldNeverAppear" "docs-vault/03-Resources/Code Outline/src-App outline.md" \
+  && fail "dependency code leaked into the outline" || pass "dependency code stays out"
+"$ROOT/vault-forge" validate --quiet >"$WORK/ingest-validate.log" 2>&1 && pass "gate passes after ingest" \
+  || { fail "gate passes after ingest"; tail -5 "$WORK/ingest-validate.log"; }
+cd "$WORK/demo-app"
+
 # 8. the npx launcher and the GitHub install path
 node "$ROOT/bin/vault-forge.js" --version >"$WORK/launcher.log" 2>&1 && pass "node launcher runs the engine" \
   || fail "node launcher runs the engine"
