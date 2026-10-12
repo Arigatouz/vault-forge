@@ -61,7 +61,10 @@ npx -y github:Arigatouz/vault-forge init --name "My App"
 # 3. read the repository and seed the vault, then build the index and run the gate
 ./.vault-forge/vault-forge build
 
-# 4. keep the index fresh after note edits (agents search this instead of grepping)
+# 4. prove the add-on actually started in this vault (exit 0, or it names the two clicks)
+./.vault-forge/vault-forge plugin doctor
+
+# 5. keep the index fresh after note edits (agents search this instead of grepping)
 ./.vault-forge/vault-forge index
 ```
 
@@ -78,7 +81,8 @@ plus `validate`.
 | `search "query"` | Ranked hits as `path:line` plus snippet, with how many query terms matched. `--json` for agents, `--tag` / `--kind` filters. |
 | `validate` | The gate: frontmatter keys and vocabulary, wikilink resolution, orphans, canvas JSON, base YAML, index freshness. Exit code 1 on errors. `--strict` makes orphans errors. |
 | `plugin install` | Install the Obsidian add-on into the vault, either `--from-github owner/repo[@tag]` (downloads the release assets, via `gh` when present else the public release API) or `--source /path/to/built-addon`. Reads the id from the add-on's own manifest and adds it to `community-plugins.json`. |
-| `build` | `init` + `scan` + `index` + `validate` in one command. |
+| `build` | `init` + `scan` + `ingest` + `index` + `validate` in one command (`--skip-ingest` for the metadata-only path). |
+| `plugin doctor` | Exit 0 only when the add-on is installed **and** known to have started in this vault, by reading its `LOADED.txt` heartbeat. Fails with the two-click fix when community plugins are off for that vault. |
 | `status` | What this repo has right now: vault path, notes, index state, add-on state. |
 
 Global flag: `--repo <path>` (default: nearest ancestor with `.vault-forge/forge.json`, else the git root).

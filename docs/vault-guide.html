@@ -319,6 +319,17 @@ summary.</td></tr>
 a panel, and logs the run. Four agents are wired: <b>Codex</b>, <b>Claude Code</b>, <b>Antigravity</b>,
 <b>OpenCode</b>.</p>
 
+<h4>Installing it, and proving it runs</h4>
+<pre>./.vault-forge/vault-forge plugin install --from-github Arigatouz/agent-dispatch   <b># or @v0.1.0 to pin</b>
+./.vault-forge/vault-forge plugin status    <b># files, registry entry, and when it last started</b>
+./.vault-forge/vault-forge plugin doctor    <b># exit 0 only when it has really started in this vault</b></pre>
+<p><code>doctor</code> is the honest check, because <b>installing is not the same as running</b>. The files can
+be on disk and the id can be listed in <code>community-plugins.json</code> while Obsidian still treats this
+vault as not allowing plugins, in which case there is no ribbon icon and no command, and nothing in the
+plugin's own logs will say so. <code>doctor</code> reads the heartbeat file the plugin writes when it loads
+(<code>LOADED.txt</code>, next to <code>main.js</code>) and fails with the exact two clicks when it is missing.
+<code>validate</code> raises the same condition as a warning, so <code>build</code> surfaces it unasked.</p>
+
 <h4>Where it lives in the UI</h4>
 <table>
 <tr><th>To do this</th><th>Do this</th></tr>
@@ -410,9 +421,9 @@ scanner never read the document or the code behind it</td><td>Run <code>ingest</
 <td>Community plugins are off <b>for this vault</b>. The switch is per vault, not global, and a plugin
 folder on disk plus an entry in <code>community-plugins.json</code> is not enough: Obsidian only loads what
 it considers enabled</td>
-<td>Settings → Community plugins → turn on community plugins → enable Agent Dispatch. Then confirm it really
-loaded: the plugin writes a <code>LOADED.txt</code> heartbeat next to its <code>main.js</code> when it
-starts</td></tr>
+<td>Settings → Community plugins → turn on community plugins → enable Agent Dispatch. Then run
+<code>./.vault-forge/vault-forge plugin doctor</code>: it passes only once the plugin has written its
+<code>LOADED.txt</code> heartbeat</td></tr>
 <tr><td>A dashboard block is empty</td><td>The Base filter does not match any note's properties</td>
 <td>Run <code>validate</code> to find notes with a missing or out-of-vocabulary property, then fix the
 frontmatter</td></tr>
