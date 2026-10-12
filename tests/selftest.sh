@@ -167,7 +167,7 @@ grep -q 'fake-addon' docs-vault/.obsidian/community-plugins.json \
 mkdir -p docs-vault/.obsidian/plugins/fake-addon
 printf '{"id":"fake-addon","name":"Fake","version":"1.0.0","minAppVersion":"1.0.0","description":"x","author":"t","isDesktopOnly":true}\n' > docs-vault/.obsidian/plugins/fake-addon/manifest.json
 printf 'module.exports={}\n' > docs-vault/.obsidian/plugins/fake-addon/main.js
-if "$ROOT/vault-forge" plugin doctor --quiet >"$WORK/doctor1.log" 2>&1; then
+if "$ROOT/vault-forge" plugin doctor >"$WORK/doctor1.log" 2>&1; then
   fail "doctor fails when the add-on never started"
 else
   pass "doctor fails when the add-on never started"
