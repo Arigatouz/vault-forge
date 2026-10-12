@@ -1,0 +1,692 @@
+/* ==========================================================================
+   Herms-vault · Cyberpunk Neon-Noir theme
+   --------------------------------------------------------------------------
+   Token source ..... /Users/alig/ali-work/ali-workspace/docs/design-tokens.md
+   Token contract ... [[Obsidian Cyberpunk Theme]] (03-Resources)
+   Fonts ............ hermes-cyberpunk-fonts.css (Orbitron, Share Tech Mono)
+   Target ........... Obsidian 1.12.7, dark mode only (base theme "obsidian")
+   Scope ............ body.theme-dark
+
+   Contrast: every text pair below was measured with the WCAG 2.2 relative
+   luminance formula against the surfaces it actually sits on. Ratios live in
+   the comments next to the value and in full in the token contract note.
+   Values marked CSS-ONLY are new shades, not in the source token file: they
+   exist because the source hex fails the 4.5:1 bar as text.
+   Turn the snippet off in Settings > Appearance > CSS snippets to revert.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Primitives: the source tokens, values unchanged
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --cyber-black: #0a0a0f;
+  --cyber-dark: #12121a;
+  --cyber-card: #1b1b26;
+  --cyber-primary: #00f3ff;
+  --cyber-secondary: #ff00ff;
+  --cyber-accent: #7000ff;
+  --cyber-warning: #fcee0a;
+  --cyber-danger: #ff2a6d;
+  --cyber-success: #05ffa1;
+  --cyber-text: #e0e0e0;
+
+  /* CSS-ONLY · text shades: the primitive above is a graphic, not a label */
+  --cyber-text-muted: #a7a7b2;     /* 7.16:1 on card, 8.29:1 on base · AAA */
+  --cyber-text-faint: #8a8a99;     /* 5.02:1 on card, 5.81:1 on base · AA  */
+  --cyber-secondary-text: #ff69ff; /* 7.08:1 on card · AAA (brand: 5.44 AA) */
+  --cyber-danger-text: #ff7ca5;    /* 7.05:1 on card · AAA (brand: 4.71 AA) */
+  --cyber-accent-text: #c291ff;    /* 7.14:1 on card · AAA */
+  --cyber-accent-visible: #8526ff; /* 3.02:1 on card · non-text marks only */
+  --cyber-azure-text: #8fb3ff;     /* 8.17:1 on card · AAA, stands in for blue */
+  --cyber-orange-text: #ffa860;    /* 8.95:1 on card · AAA */
+  --cyber-ink: #0a0a0f;            /* label on a light accent fill: 14.36:1 on cyan */
+  --cyber-border-ui: #6b6b7b;      /* 3.26:1 on card · control boundary (1.4.11) */
+  --cyber-border-soft: #3a3a4a;    /* 1.53:1 on card · decorative separator */
+  --cyber-glow: rgba(0, 243, 255, 0.3);
+
+  --cyber-mono: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --cyber-display: 'Orbitron', system-ui, -apple-system, sans-serif;
+  /* CSS-ONLY · reading face. Added 2026-10-04: Orbitron is a display face and tires the eye as a
+     paragraph face at 16px. Inter keeps the techy tone without the geometric strain. */
+  --cyber-read: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   2. Obsidian base scale
+   base-00 is the primary surface, base-100 is normal text. Everything the app
+   derives from this scale (menus, tooltips, borders) follows.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --color-base-00: #0a0a0f;
+  --color-base-05: #0e0e14;
+  --color-base-10: #12121a;
+  --color-base-20: #16161f;
+  --color-base-25: #1b1b26;
+  --color-base-30: #22222f;
+  --color-base-35: #2c2c3a;
+  --color-base-40: #3a3a4a;
+  --color-base-50: #6b6b7b;
+  --color-base-60: #828292;
+  --color-base-70: #a7a7b2;
+  --color-base-100: #e0e0e0;
+}
+
+/* --------------------------------------------------------------------------
+   3. Surfaces
+   Base #0a0a0f, Surface 1 #12121a, Surface 2 #1b1b26, Surface 3 = card + blur
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --background-primary: var(--cyber-black);
+  --background-primary-alt: var(--cyber-dark);
+  --background-secondary: var(--cyber-card);
+  --background-secondary-alt: var(--cyber-dark);
+
+  --background-modifier-hover: rgba(0, 243, 255, 0.08);
+  --background-modifier-active-hover: rgba(0, 243, 255, 0.14);
+  --background-modifier-border: var(--cyber-border-soft);
+  --background-modifier-border-hover: rgba(0, 243, 255, 0.35);
+  --background-modifier-border-focus: var(--cyber-primary);
+  --background-modifier-form-field: var(--cyber-dark);
+  --background-modifier-message: var(--cyber-card);
+  --background-modifier-error: rgba(255, 42, 109, 0.16);
+  --background-modifier-error-hover: rgba(255, 42, 109, 0.26);
+  --background-modifier-error-rgb: 255, 42, 109;
+  --background-modifier-success: rgba(5, 255, 161, 0.16);
+  --background-modifier-success-rgb: 5, 255, 161;
+  --background-modifier-box-shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   4. Accent, interactive, text
+   The accent is a light cyan, so every label that sits on an accent fill is
+   dark ink, never white (white on cyan measures 1.38:1).
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --accent-h: 183;
+  --accent-s: 100%;
+  --accent-l: 50%;
+  --color-accent: var(--cyber-primary);
+  --color-accent-1: #7af8ff;
+  --color-accent-2: #b6fbff;
+
+  --interactive-normal: var(--cyber-dark);
+  --interactive-hover: #22222f;
+  --interactive-accent: var(--cyber-primary);
+  --interactive-accent-hover: #7af8ff;
+  --interactive-accent-hsl: 183.2, 100%, 50%;
+  --text-on-accent: var(--cyber-ink);
+  --text-on-accent-inverted: var(--cyber-ink);
+
+  --text-normal: var(--cyber-text);
+  --text-muted: var(--cyber-text-muted);
+  --text-faint: var(--cyber-text-faint);
+  --text-accent: var(--cyber-primary);
+  --text-accent-hover: #7af8ff;
+  --text-success: var(--cyber-success);
+  --text-warning: var(--cyber-warning);
+  --text-error: var(--cyber-danger-text);
+  --text-selection: rgba(0, 243, 255, 0.32);
+  --text-highlight-bg: rgba(252, 238, 10, 0.28);
+  --text-highlight-bg-rgb: 252, 238, 10;
+  --caret-color: var(--cyber-primary);
+
+  --bold-color: var(--cyber-text);
+  --italic-color: var(--cyber-text);
+}
+
+/* --------------------------------------------------------------------------
+   5. Extended colors: Obsidian's own status, callout, code and canvas slots
+   Blue and orange have no equivalent in the source tokens. They get measured
+   shades from the same family so Obsidian keeps distinct info and warning
+   slots instead of collapsing onto cyan and yellow.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --color-red: var(--cyber-danger-text);
+  --color-orange: var(--cyber-orange-text);
+  --color-yellow: var(--cyber-warning);
+  --color-green: var(--cyber-success);
+  --color-cyan: var(--cyber-primary);
+  --color-blue: var(--cyber-azure-text);
+  --color-purple: var(--cyber-accent-text);
+  --color-pink: var(--cyber-secondary-text);
+  --color-red-rgb: 255, 124, 165;
+  --color-orange-rgb: 255, 168, 96;
+  --color-yellow-rgb: 252, 238, 10;
+  --color-green-rgb: 5, 255, 161;
+  --color-cyan-rgb: 0, 243, 255;
+  --color-blue-rgb: 143, 179, 255;
+  --color-purple-rgb: 194, 145, 255;
+  --color-pink-rgb: 255, 105, 255;
+}
+
+/* Callout slots are consumed as rgb(var(--callout-x)), so they take triplets
+   and never hex. Each title colour clears AAA on its own 10% tint. */
+body.theme-dark {
+  --callout-default: 0, 243, 255;
+  --callout-info: 143, 179, 255;
+  --callout-todo: 143, 179, 255;
+  --callout-tip: 0, 243, 255;
+  --callout-example: 0, 243, 255;
+  --callout-success: 5, 255, 161;
+  --callout-warning: 252, 238, 10;
+  --callout-error: 255, 124, 165;
+  --callout-fail: 255, 124, 165;
+  --callout-bug: 255, 124, 165;
+  --callout-important: 255, 105, 255;
+  --callout-question: 194, 145, 255;
+  --callout-summary: 167, 167, 178;
+  --callout-quote: 167, 167, 178;
+  --callout-border-width: 0 0 0 2px;
+  --callout-border-opacity: 0.7;
+  --callout-radius: 0px;
+  --callout-title-weight: 700;
+  --callout-title-size: 0.92em;
+  --callout-blend-mode: normal;
+}
+
+/* --------------------------------------------------------------------------
+   6. Typography
+   Three roles, not one. Display (Orbitron) carries the inline title and h1/h2,
+   where it is short and decorative. Reading (Inter) carries the note body, h3 to
+   h6, menus and file names, because that is what eyes sit on for hours. Data
+   (Share Tech Mono) carries code, property keys, tags and the status bar.
+   The source token file put Orbitron on body text as well; that was the one
+   instruction changed here, and the reason is legibility, not taste.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --font-interface-theme: var(--cyber-read);
+  --font-text-theme: var(--cyber-read);
+  --font-monospace-theme: var(--cyber-mono);
+  --font-weight: 400;
+  --bold-weight: 700;
+  --line-height-normal: 1.65;
+
+  --h1-font: var(--cyber-display);
+  --h2-font: var(--cyber-display);
+
+  --h1-color: var(--cyber-primary);
+  --h2-color: var(--cyber-primary);
+  --h3-color: var(--cyber-primary);
+  --h4-color: var(--cyber-primary);
+  --h5-color: var(--cyber-primary);
+  --h6-color: var(--cyber-primary);
+  --h1-size: 2.1em;
+  --h2-size: 1.55em;
+  --h3-size: 1.28em;
+  --h4-size: 1.12em;
+  --h5-size: 1.02em;
+  --h6-size: 0.94em;
+  --h1-weight: 900;
+  --h2-weight: 700;
+  --h3-weight: 700;
+  --h4-weight: 700;
+  --h5-weight: 700;
+  --h6-weight: 700;
+  --h1-style: italic;
+  --heading-formatting: var(--cyber-text-faint);
+
+  --inline-title-color: #ffffff;
+  --inline-title-font: var(--cyber-display);
+  --inline-title-size: 2.2em;
+  --inline-title-weight: 900;
+  --inline-title-style: italic;
+  --inline-title-line-height: 1.15;
+  --file-line-width: 46rem;
+}
+
+/* --------------------------------------------------------------------------
+   7. Links, tags, lists, rules, blocks, embeds
+   Link colour is cyan at 12.4:1 on card. External links take the magenta text
+   shade so internal and external links are told apart by colour, not only by
+   an icon. Unresolved links take the danger text shade at full opacity.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --link-color: var(--cyber-primary);
+  --link-color-hover: #7af8ff;
+  --link-decoration: none;
+  --link-decoration-hover: underline;
+  --link-decoration-thickness: 1px;
+  --link-weight: 500;
+  --link-unresolved-color: var(--cyber-danger-text);
+  --link-unresolved-opacity: 1;
+  --link-unresolved-filter: none;
+  --link-unresolved-decoration-style: dashed;
+  --link-unresolved-decoration-color: var(--cyber-danger-text);
+  --link-external-color: var(--cyber-secondary-text);
+  --link-external-color-hover: #ff9bff;
+  --link-external-decoration: none;
+  --link-external-decoration-hover: underline;
+
+  --tag-size: 0.82em;
+  --tag-color: var(--cyber-primary);
+  --tag-color-hover: var(--cyber-ink);
+  --tag-background: rgba(0, 243, 255, 0.14);
+  --tag-background-hover: var(--cyber-primary);
+  --tag-border-width: 1px;
+  --tag-border-color: rgba(0, 243, 255, 0.38);
+  --tag-border-color-hover: var(--cyber-primary);
+  --tag-radius: 0px;
+  --tag-weight: 700;
+  --tag-padding-x: 0.5em;
+  --tag-padding-y: 0.1em;
+  --tag-decoration: none;
+  --tag-decoration-hover: none;
+
+  --list-marker-color: var(--cyber-primary);
+  --list-marker-color-hover: var(--cyber-secondary-text);
+  --list-marker-color-collapsed: var(--cyber-text-faint);
+  --list-bullet-size: 0.32em;
+  --list-bullet-radius: 1px;
+  --list-spacing: 0.15em;
+
+  --hr-color: var(--cyber-border-soft);
+  --hr-thickness: 2px;
+
+  --blockquote-border-thickness: 2px;
+  --blockquote-border-color: var(--cyber-secondary);
+  --blockquote-background-color: rgba(255, 0, 255, 0.05);
+  --blockquote-color: var(--cyber-text);
+  --blockquote-font-style: normal;
+
+  --embed-background: var(--cyber-dark);
+  --embed-border-start: 2px solid var(--cyber-primary);
+  --embed-border-end: none;
+  --embed-border-top: none;
+  --embed-border-bottom: none;
+  --embed-padding: 0 0 0 var(--size-4-4);
+  --embed-font-style: normal;
+
+  --code-background: var(--cyber-dark);
+  --code-size: 0.87em;
+  --code-normal: var(--cyber-text);
+  --code-comment: var(--cyber-text-faint);   /* 5.48:1 on code bg · AA  */
+  --code-keyword: var(--cyber-primary);      /* 13.54:1 · AAA */
+  --code-string: var(--cyber-success);       /* 14.04:1 · AAA */
+  --code-function: var(--cyber-secondary-text); /* 7.73:1 · AAA */
+  --code-value: var(--cyber-warning);        /* 15.41:1 · AAA */
+  --code-tag: var(--cyber-danger-text);      /* 7.70:1 · AAA */
+  --code-property: var(--cyber-accent-text); /* 7.80:1 · AAA */
+  --code-important: var(--cyber-danger-text);
+  --code-operator: var(--cyber-text-muted);
+  --code-punctuation: var(--cyber-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   8. Tables, properties, checkboxes, inputs
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --table-background: transparent;
+  --table-border-width: 1px;
+  --table-border-color: var(--cyber-border-soft);
+  --table-header-background: var(--cyber-dark);
+  --table-header-background-hover: rgba(0, 243, 255, 0.1);
+  --table-header-color: var(--cyber-primary);
+  --table-header-weight: 700;
+  --table-header-size: 0.86em;
+  --table-text-size: 0.95em;
+  --table-text-color: var(--cyber-text);
+  --table-row-alt-background: rgba(255, 255, 255, 0.02);
+  --table-row-background-hover: rgba(0, 243, 255, 0.06);
+  --table-selection: rgba(0, 243, 255, 0.22);
+  --table-selection-border-color: var(--cyber-primary);
+  --table-drag-handle-color: var(--cyber-text-faint);
+  --table-drag-handle-background-active: var(--cyber-primary);
+  --table-drag-handle-color-active: var(--cyber-ink);
+
+  --metadata-background: transparent;
+  --metadata-border-color: var(--cyber-border-soft);
+  --metadata-border-radius: 0px;
+  --metadata-divider-color: #2a2a36;
+  --metadata-divider-color-hover: var(--cyber-border-ui);
+  --metadata-divider-color-focus: var(--cyber-primary);
+  --metadata-gap: 4px;
+  --metadata-property-background: transparent;
+  --metadata-property-background-hover: rgba(0, 243, 255, 0.06);
+  --metadata-property-background-active: var(--cyber-dark);
+  --metadata-property-radius: 0px;
+  --metadata-label-text-color: var(--cyber-primary);
+  --metadata-label-text-color-hover: #7af8ff;
+  --metadata-label-font-size: 0.78em;
+  --metadata-label-font-weight: 700;
+  --metadata-label-width: 11em;
+  --metadata-input-text-color: var(--cyber-text);
+  --metadata-input-background: var(--cyber-dark);
+  --metadata-input-background-hover: #16161f;
+  --metadata-input-background-active: var(--cyber-dark);
+  --metadata-input-height: 1.9em;
+  --metadata-input-font-size: 0.85em;
+
+  --input-radius: 0px;
+  --input-border-width: 1px;
+  --input-font-weight: 400;
+  --input-height: 2.1em;
+  --button-radius: 0px;
+
+  --checkbox-size: 15px;
+  --checkbox-radius: 0px;
+  --checkbox-color: var(--cyber-primary);
+  --checkbox-color-hover: #7af8ff;
+  --checkbox-border-color: var(--cyber-border-ui);
+  --checkbox-border-color-hover: var(--cyber-primary);
+  --checkbox-marker-color: var(--cyber-ink);
+  --checklist-done-color: var(--cyber-text-faint);
+  --checklist-done-decoration: line-through;
+
+  --toggle-thumb-color: var(--cyber-ink);
+  --toggle-border-width: 2px;
+  --toggle-radius: 0px;
+  --toggle-thumb-radius: 0px;
+}
+
+/* --------------------------------------------------------------------------
+   9. Window chrome: titlebar, ribbon, tabs, status bar, scrollbars, dividers
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --titlebar-background: var(--cyber-dark);
+  --titlebar-background-focused: var(--cyber-dark);
+  --titlebar-border-color: var(--cyber-border-soft);
+  --titlebar-text-color: var(--cyber-text-muted);
+  --titlebar-text-color-focused: var(--cyber-primary);
+  --titlebar-text-weight: 700;
+
+  --ribbon-background: var(--cyber-dark);
+  --ribbon-background-collapsed: var(--cyber-dark);
+
+  --tab-container-background: var(--cyber-black);
+  --tab-background-active: var(--cyber-card);
+  --tab-text-color: var(--cyber-text-muted);
+  --tab-text-color-active: var(--cyber-text);
+  --tab-text-color-focused: var(--cyber-text-muted);
+  --tab-text-color-focused-active: var(--cyber-text);
+  --tab-text-color-focused-highlighted: var(--cyber-primary);
+  --tab-text-color-focused-active-current: var(--cyber-primary);
+  --tab-font-size: 0.82em;
+  --tab-font-weight: 600;
+  --tab-divider-color: var(--cyber-border-soft);
+  --tab-outline-color: var(--cyber-border-soft);
+  --tab-outline-width: 1px;
+  --tab-radius: 0px;
+  --tab-radius-active: 0px;
+  --tab-curve: 0px;
+
+  --status-bar-background: var(--cyber-dark);
+  --status-bar-border-color: var(--cyber-border-soft);
+  --status-bar-text-color: var(--cyber-text-muted);
+  --status-bar-font-size: 11px;
+
+  --scrollbar-bg: var(--cyber-dark);
+  --scrollbar-thumb-bg: #4a4a5c;
+  --scrollbar-active-thumb-bg: var(--cyber-primary);
+
+  --divider-color: var(--cyber-border-soft);
+  --divider-color-hover: var(--cyber-primary);
+
+  --icon-color: var(--cyber-text-muted);
+  --icon-color-hover: var(--cyber-primary);
+  --icon-color-active: var(--cyber-primary);
+  --icon-color-focused: var(--cyber-primary);
+
+  --modal-background: var(--cyber-card);
+  --modal-border-color: var(--cyber-border-soft);
+  --modal-radius: 0px;
+
+  --drag-ghost-background: var(--cyber-card);
+  --drag-ghost-text-color: var(--cyber-primary);
+  --search-result-background: rgba(0, 243, 255, 0.1);
+  --vault-profile-color: var(--cyber-text-muted);
+  --vault-profile-color-hover: var(--cyber-primary);
+}
+
+/* Navigation: active item keeps a cyan left rail and a dark active surface,
+   which is the source token's nav pattern (not a filled accent chip). */
+body.theme-dark {
+  --nav-item-color: var(--cyber-text-muted);
+  --nav-item-color-hover: var(--cyber-primary);
+  --nav-item-color-active: var(--cyber-primary);
+  --nav-item-color-selected: var(--cyber-primary);
+  --nav-item-background-hover: var(--cyber-dark);
+  --nav-item-background-active: var(--cyber-dark);
+  --nav-item-background-selected: var(--cyber-dark);
+  --nav-item-weight: 400;
+  --nav-item-weight-active: 700;
+  --nav-heading-color: var(--cyber-text-faint);
+  --nav-heading-color-hover: var(--cyber-primary);
+  --nav-heading-weight: 700;
+  --nav-indentation-guide-color: #2a2a36;
+  --nav-collapse-icon-color: var(--cyber-text-faint);
+  --nav-collapse-icon-color-collapsed: var(--cyber-primary);
+}
+
+/* --------------------------------------------------------------------------
+   10. Cards: Bases (the vault's board and card surfaces)
+   Status/priority badges in the source tokens are the card's own tinted chip;
+   here the tint is the row-hover and header tint so nothing shouts.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --bases-cards-background: var(--cyber-card);
+  --bases-cards-container-background: transparent;
+  --bases-cards-radius: 0px;
+  --bases-cards-border-width: 1px;
+  --bases-cards-shadow: 0 0 0 1px var(--cyber-border-soft);
+  --bases-cards-shadow-hover: inset 0 0 0 1px var(--cyber-primary), inset 0 0 18px rgba(0, 243, 255, 0.16);
+  --bases-cards-cover-background: var(--cyber-dark);
+  --bases-cards-font-size: 0.85em;
+  --bases-cards-line-height: 22px;
+
+  --bases-table-border-color: var(--cyber-border-soft);
+  --bases-table-header-background: var(--cyber-dark);
+  --bases-table-header-background-hover: rgba(0, 243, 255, 0.1);
+  --bases-table-header-color: var(--cyber-primary);
+  --bases-table-header-weight: 700;
+  --bases-table-row-background-hover: rgba(0, 243, 255, 0.06);
+  --bases-table-group-background: var(--cyber-dark);
+  --bases-table-cell-background-active: var(--cyber-card);
+  --bases-table-cell-shadow-focus: 0 0 0 2px var(--cyber-primary);
+  --bases-table-cell-shadow-active: 0 0 0 2px var(--cyber-border-ui);
+
+  --bases-group-heading-property-color: var(--cyber-text-faint);
+  --bases-group-heading-value-weight: 700;
+
+  --bases-embed-border-width: 0 0 0 2px;
+  --bases-embed-border-color: var(--cyber-primary);
+  --bases-embed-border-radius: 0px;
+}
+
+/* The source token card is a rectangle with one angled corner. clip-path clips
+   an outer shadow too, so the hover glow is an inset ring instead. */
+body.theme-dark .bases-cards-item {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 94% 100%, 0 100%);
+}
+body.theme-dark .bases-cards-item::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--cyber-primary), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+body.theme-dark .bases-cards-container { gap: 1rem; }
+body.theme-dark .bases-group-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8em;
+}
+body.theme-dark .bases-toolbar-result-count,
+body.theme-dark .bases-toolbar-item { font-family: var(--cyber-mono); }
+
+/* --------------------------------------------------------------------------
+   11. Canvas: the vault's spatial maps
+   Card tints are drawn at 0.07 to 0.1 alpha by the app, so the label colour is
+   measured against the tint, not against a flat surface. Worst case is the
+   yellow card at 6.82:1 (AAA).
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --canvas-background: var(--cyber-black);
+  --canvas-dot-pattern: #2a2a36;
+  --canvas-card-label-color: var(--cyber-text-muted);
+  --canvas-color: 107, 107, 123;
+  --canvas-color-1: 255, 124, 165;
+  --canvas-color-2: 255, 168, 96;
+  --canvas-color-3: 252, 238, 10;
+  --canvas-color-4: 5, 255, 161;
+  --canvas-color-5: 0, 243, 255;
+  --canvas-color-6: 194, 145, 255;
+}
+body.theme-dark .canvas-node-container {
+  border-width: 1px;
+  border-radius: 0px;
+}
+body.theme-dark .canvas-node.is-themed .canvas-node-label { font-weight: 700; }
+
+/* --------------------------------------------------------------------------
+   12. Graph: variables plus the CSS to WebGL bridge classes
+   Node fills are graphics, so they clear 3:1 against #0a0a0f. Edges are the one
+   deliberate exception: a 3:1 web reads as a solid mesh, so edges sit at
+   2.28:1 and the nodes carry the meaning. Magenta and purple are the brand
+   hexes and measure 6.30:1 and 3.50:1.
+   -------------------------------------------------------------------------- */
+body.theme-dark {
+  --graph-text: var(--cyber-text-muted);
+  --graph-line: #4a4a5c;
+  --graph-node: var(--cyber-primary);
+  --graph-node-unresolved: var(--cyber-danger-text);
+  --graph-node-focused: #ffffff;
+  --graph-node-tag: var(--cyber-warning);
+  --graph-node-attachment: var(--cyber-text-faint);
+}
+body.theme-dark .graph-view.color-fill { color: var(--graph-node); }
+body.theme-dark .graph-view.color-fill-focused { color: var(--graph-node-focused); }
+body.theme-dark .graph-view.color-fill-tag { color: var(--graph-node-tag); }
+body.theme-dark .graph-view.color-fill-attachment { color: var(--graph-node-attachment); }
+body.theme-dark .graph-view.color-fill-unresolved { color: var(--graph-node-unresolved); }
+body.theme-dark .graph-view.color-fill-highlight { color: var(--cyber-secondary); }
+body.theme-dark .graph-view.color-line { color: var(--graph-line); }
+body.theme-dark .graph-view.color-line-highlight { color: var(--cyber-primary); }
+body.theme-dark .graph-view.color-text { color: var(--graph-text); }
+body.theme-dark .graph-view.color-circle { color: var(--cyber-black); }
+body.theme-dark .graph-view.color-arrow { color: var(--cyber-text-faint); }
+
+/* --------------------------------------------------------------------------
+   13. Shapes, glow and texture that only exist as rules, not variables
+   -------------------------------------------------------------------------- */
+
+/* Decorative gradient bar across the top of the left sidebar
+   (source token: 1px tri-stop gradient; 2px so it survives on a retina panel) */
+body.theme-dark .workspace-split.mod-left-split { position: relative; }
+body.theme-dark .workspace-split.mod-left-split::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyber-primary), var(--cyber-secondary), var(--cyber-accent));
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* Headings: uppercase, wider tracking, cyan glow. The inline title is the hero
+   style: italic, tight tracking, offset magenta shadow. */
+body.theme-dark :is(.markdown-preview-view, .markdown-source-view, .markdown-rendered)
+  :is(h1, h2, h3, h4, h5, h6) {
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  text-shadow: 0 0 2px rgba(0, 243, 255, 0.45);
+}
+body.theme-dark :is(.markdown-preview-view, .markdown-source-view, .markdown-rendered) h1 {
+  text-shadow: 2px 2px 0 var(--cyber-secondary);
+  letter-spacing: 0;
+}
+body.theme-dark .inline-title {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  text-shadow: 2px 2px 0 var(--cyber-secondary);
+}
+
+/* Active tab gets the card surface and a cyan top rail */
+body.theme-dark .workspace-tab-header.is-active .workspace-tab-header-inner {
+  box-shadow: inset 0 2px 0 0 var(--cyber-primary);
+}
+
+/* Nav items reserve the left rail so the active state does not reflow */
+body.theme-dark :is(.nav-file-title, .nav-folder-title) { border-left: 2px solid transparent; }
+body.theme-dark :is(.nav-file-title, .nav-folder-title).is-active {
+  border-left-color: var(--cyber-primary);
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.35);
+}
+
+/* Control boundaries keep the 3:1 non-text bar (1.4.11), separators do not */
+body.theme-dark :is(input[type='text'], input[type='search'], input[type='number'], input[type='email'],
+  textarea, select, .dropdown, .search-input-container input, .metadata-input-longtext) {
+  border: 1px solid var(--cyber-border-ui);
+  box-shadow: none;
+}
+body.theme-dark :is(input[type='text'], input[type='search'], textarea, .search-input-container input):focus {
+  border-color: var(--cyber-primary);
+  box-shadow: 0 0 0 1px var(--cyber-primary), 0 0 10px rgba(0, 243, 255, 0.25);
+}
+body.theme-dark ::placeholder { color: var(--cyber-text-faint); opacity: 1; }
+
+/* Primary button, the source token's btn-cyber: uppercase, wide tracking, glow */
+body.theme-dark :is(button.mod-cta, .mod-cta) {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  box-shadow: 0 0 10px var(--cyber-glow);
+}
+body.theme-dark :is(button.mod-cta, .mod-cta):hover { box-shadow: 0 0 5px #00f3ff, 0 0 14px #00f3ff; }
+
+/* Scrollbar thumb: the brand value (#1b1b26) is 1.16:1 against the track and
+   reads as no thumb at all, so the thumb takes the separator shade. */
+body.theme-dark ::-webkit-scrollbar-thumb { border: 1px solid var(--cyber-border-soft); border-radius: 0; }
+body.theme-dark ::-webkit-scrollbar-thumb:hover { background: var(--cyber-primary); }
+
+/* Horizontal rule carries the tri-stop gradient */
+body.theme-dark :is(.markdown-rendered, .markdown-preview-view) hr {
+  background-image: linear-gradient(90deg, var(--cyber-primary), var(--cyber-secondary), var(--cyber-accent));
+  border: none;
+  height: 2px;
+  opacity: 0.75;
+}
+
+/* Metadata reads as data: mono, uppercase keys, cyan */
+body.theme-dark .metadata-property-key,
+body.theme-dark .metadata-property-key-input {
+  font-family: var(--cyber-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+body.theme-dark :is(.metadata-property-value, .metadata-input, .metadata-input-longtext) {
+  font-family: var(--cyber-mono);
+}
+body.theme-dark .status-bar { font-family: var(--cyber-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+body.theme-dark .tag { font-family: var(--cyber-mono); text-transform: uppercase; letter-spacing: 0.04em; }
+body.theme-dark :is(.search-result-file-title, .suggestion-item) { font-family: var(--cyber-read); }
+
+/* Block ids, code blocks and inline code take the mono face */
+body.theme-dark :is(pre, code, .cm-inline-code, .cm-line.HyperMD-codeblock) { font-family: var(--cyber-mono); }
+body.theme-dark .markdown-rendered pre {
+  border-left: 2px solid var(--cyber-primary);
+  border-radius: 0;
+}
+
+/* Callout: left rail in the callout colour, no rounding */
+body.theme-dark .callout { border-radius: 0; mix-blend-mode: normal; }
+body.theme-dark .callout-title { text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--cyber-mono); }
+
+/* Faint 40px grid behind the note, the source token's background texture.
+   It is decorative: at this alpha it is texture, never a contrast carrier. */
+body.theme-dark .markdown-reading-view .markdown-preview-view,
+body.theme-dark .markdown-source-view.mod-cm6 .cm-scroller {
+  background-image:
+    linear-gradient(rgba(0, 243, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-attachment: local;
+}
+body.theme-dark .markdown-source-view.mod-cm6 .cm-editor { background-color: transparent; }
+
+/* Selection keeps the text colour and only shifts the surface (6.46:1) */
+body.theme-dark ::selection { background-color: var(--text-selection); color: var(--cyber-text); }
+body.theme-dark .markdown-rendered mark { color: var(--cyber-text); }

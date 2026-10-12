@@ -1,0 +1,145 @@
+---
+type: note
+status: active
+tags: [meta, conventions]
+created: {{date}}
+updated: {{date}}
+priority: high
+---
+# {{project}} vault: conventions
+
+Vault path: `{{repo_path}}/{{vault_dir}}`
+Generated: {{date}} by `vault-forge` (vendored at `{{repo_path}}/.vault-forge/`)
+Project: `{{project}}` at `{{repo_path}}`
+
+This vault is authored **filesystem-first**: plain Markdown, YAML frontmatter and JSON. No community
+plugin is required to read or maintain it, and every file here is diffable in a pull request.
+
+## 1. Folder map
+
+| Folder | Holds | Notes |
+|---|---|---|
+| `00-Inbox/` | raw captures, unfiled | anything lands here first; file it later |
+| `01-Projects/` | things with an outcome and an end date | one note per project, `type: project` |
+| `02-Areas/` | long-lived responsibilities, never "done" | {{areas_list}} |
+| `03-Resources/` | reference notes and sources worth citing | `type: resource` |
+| `04-Content/` | things we publish | `Talks/`, `Courses/`, `Articles/` |
+| `05-Dashboards/` | Maps of Content and `.base` views | [[Dashboard]] is the entry point |
+| `06-Canvases/` | JSON Canvas boards | spatial maps, not link-force graphs |
+| `07-Daily/` | daily notes, `YYYY-MM-DD.md` | core Daily Notes plugin points here |
+| `08-Archive/` | finished or dropped work | keep it, tag it `#archive`, stop linking it |
+| `09-Attachments/` | images, PDFs, exports | default attachment folder |
+| `Templates/` | note templates | excluded from Bases filters and link audits |
+| `index/` | generated search index | do not hand-edit; regenerate with `vault-forge index` |
+
+## 2. Frontmatter schema
+
+Every note carries these keys:
+
+```yaml
+---
+type: note            # note | moc | project | area | resource | content | daily | meeting | decision
+status: active        # inbox | idea | draft | active | paused | done | published | archived | logged
+area: "[[{{first_area}}]]"   # the area MOC this belongs to (omit on the area MOC itself)
+tags: [concept]       # lowercase, see tag vocabulary below
+created: {{date}}     # date only
+updated: {{date}}     # bump on every substantive edit
+priority: medium      # high | medium | low
+---
+```
+
+Per-type extras (optional, only when they carry meaning):
+
+- `project`: `next_action`, `due`, `repo`
+- `content`: `content_type`, `stage`, `audience`, `publish_date`, `channel`
+- `resource`: `source`, `source_url`, `confidence`, `review_date`, `publishable`
+- `decision`: `decision_date`, `status` = `active` (superseded decisions get `status: archived`)
+- `daily`: nothing extra; the filename date is the identity
+
+Dates are `YYYY-MM-DD`; never write a bare `{{date:YYYY-MM-DD}}` token outside `Templates/`.
+
+## 3. Tag vocabulary
+
+Keep tags lowercase and few. Namespaced tags for what Bases and graph colour groups query:
+
+- `#concept`: an explanation of how something works
+- `#decision`: a recorded choice with trade-offs (ADR-shaped)
+- `#reference`: a source, doc, or citation-backed note
+- `#project`, `#content`, `#area`: mirrors the `type`
+- `#inbox`: unfiled capture, remove when filed
+- `#archive`: superseded; do not add new links to it
+- Domain tags: {{domain_tags}}
+
+## 4. Wikilinks
+
+- Internal links are wikilinks: `[[Note Name]]` or `[[Note Name|display text]]`. Markdown links are
+  for external URLs only.
+- Filenames are the link target, so **basenames must stay unique across the vault**. That is what makes
+  `[[Dashboard]]` resolve from anywhere without a path.
+- Non-note assets link with their extension: `[[Vault Overview.canvas|Vault Overview]]`,
+  `![[Projects.base#Active]]`.
+- Link laterally: a note about a topic links to the two or three notes it actually depends on. Do not
+  make every note link back to a generic hub; that flattens the graph into a star.
+- Each note ends with a short `## Related` list of the links that matter.
+- Rename policy: link maintenance on rename is a script pass over the Markdown (find every `[[old name]]`,
+  rewrite, verify), never something assumed from a plugin.
+
+## 5. Maps of Content and dashboards
+
+- `05-Dashboards/Dashboard.md` is the operational surface; it embeds the Bases views.
+- `02-Areas/<Area>/<Area>.md` is the MOC for an area and the canonical list of what lives in it.
+- `Home.md` is the front door and links down into the areas and surfaces.
+- Bases live next to the dashboard: [[Projects.base|Projects]], [[Content Pipeline.base|Content Pipeline]],
+  [[Resource Library.base|Resource Library]], [[Daily Log.base|Daily Log]]. Embed one view with
+  `![[Projects.base#Active]]`.
+
+## 6. Daily notes
+
+Core Daily Notes plugin -> folder `07-Daily`, format `YYYY-MM-DD`, template [[Daily Note]].
+A daily note links the work it touched, it does not restate it.
+
+## 7. Graph view
+
+`.obsidian/graph.json` pre-seeds colour groups: tags first (`#decision`, `#concept`, `#reference`,
+`#moc`, `#archive`), then paths (`01-Projects`, `02-Areas`, `03-Resources`, `04-Content`,
+`05-Dashboards`, `06-Canvases`, `07-Daily`, `08-Archive`, `Templates`, `09-Attachments`). First
+matching query wins, so tags stay above paths. A running Obsidian rewrites `graph.json` whenever its
+settings change, so re-apply from this file if the groups disappear.
+
+## 8. Search index (this is how agents read this vault)
+
+```bash
+./.vault-forge/vault-forge index            # rebuild index/ after a batch of note edits
+./.vault-forge/vault-forge search "query"   # ranked hits as path:line + snippet
+./.vault-forge/vault-forge search "query" --json
+```
+
+`index/vault-index.json` holds one record per note (title, type, status, tags, headings with line
+numbers, links). `index/chunks.jsonl` holds heading-level chunks with line ranges, which is what makes
+`path:line` citations possible without loading whole files. Agents read the index and search it first,
+and open a note only when the chunk is not enough.
+
+## 9. How an agent should write here
+
+1. Read before writing: search this vault for an existing note on the topic first.
+2. Follow the frontmatter schema exactly; a missing `updated` breaks the dashboards' freshness columns.
+3. Bump `updated` on edited notes, and add the new note to its area MOC's list.
+4. Never edit `.obsidian/workspace.json` (the running app owns it), and never hand-edit `index/`.
+5. Removing: `08-Archive/` with `status: archived` beats deleting.
+6. Attachment filenames are `kebab-case.ext` and live in `09-Attachments/`.
+7. Verify before claiming: `./.vault-forge/vault-forge validate` must report 0 errors before a note
+   change is considered done.
+
+## 10. Git rules for this vault
+
+- Committed: notes, templates, bases, canvases, `.obsidian` app config, snippets, and the index.
+- Ignored (per-user state): `.obsidian/workspace.json`, `.obsidian/plugins/*/data.json`,
+  `.obsidian/cache`.
+- The vault lives next to the code on purpose. It is reviewable like code: a note change that claims a
+  behaviour change lands with the code change that made it.
+
+## Related
+
+- [[Home]]
+- [[Dashboard]]
+- [[Codebase Map]]

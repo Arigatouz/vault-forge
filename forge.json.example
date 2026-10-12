@@ -1,0 +1,17 @@
+{
+  "project": "my-app",
+  "vault_dir": "docs-vault",
+  "areas": ["Architecture", "Frontend"],
+  "domain_tags": ["angular", "tooling"],
+  "commit_index": true,
+  "scan": {
+    "git_log": 40,
+    "max_files": 60,
+    "exclude": ["node_modules", ".git", "dist", "build", "out", ".angular", "target"]
+  },
+  "plugin": {
+    "id": "agent-dispatch",
+    "source": "/Users/alig/Ali-work/public-projects/agent-dispatch"
+  },
+  "env_var": "PROJECT_VAULT_PATH"
+}

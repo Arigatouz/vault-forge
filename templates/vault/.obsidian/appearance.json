@@ -1,0 +1,9 @@
+{
+  "theme": "obsidian",
+  "accentColor": "#00f3ff",
+  "cssTheme": "",
+  "enabledCssSnippets": [
+    "hermes-cyberpunk-fonts",
+    "hermes-cyberpunk"
+  ]
+}

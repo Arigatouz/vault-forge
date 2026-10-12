@@ -1,0 +1,43 @@
+filters:
+  and:
+    - 'type == "content"'
+    - not:
+        - file.inFolder("Templates")
+
+formulas:
+  days_to_publish: 'if(publish_date, (date(publish_date) - today()).days, "")'
+  stage_icon: 'if(stage == "published", "✅", if(stage == "recording", "🎙️", if(stage == "draft", "📝", "💡")))'
+
+properties:
+  content_type:
+    displayName: "Kind"
+  publish_date:
+    displayName: "Publish"
+  stage_icon:
+    displayName: ""
+  formula.days_to_publish:
+    displayName: "Days to publish"
+
+views:
+  - type: table
+    name: "Pipeline"
+    groupBy:
+      property: stage
+      direction: ASC
+    order:
+      - file.name
+      - content_type
+      - formula.stage_icon
+      - area
+      - formula.days_to_publish
+
+  - type: cards
+    name: "Unpublished"
+    filters:
+      not:
+        - 'stage == "published"'
+    order:
+      - file.name
+      - content_type
+      - stage
+      - audience

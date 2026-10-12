@@ -1,0 +1,26 @@
+filters:
+  and:
+    - file.inFolder("07-Daily")
+    - '/^\d{4}-\d{2}-\d{2}$/.matches(file.basename)'
+
+formulas:
+  day_of_week: 'date(file.basename).format("ddd")'
+
+properties:
+  formula.day_of_week:
+    displayName: "Day"
+
+views:
+  - type: table
+    name: "Recent"
+    limit: 14
+    order:
+      - file.name
+      - formula.day_of_week
+      - file.size
+      - file.mtime
+
+  - type: list
+    name: "All daily notes"
+    order:
+      - file.name

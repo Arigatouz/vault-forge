@@ -1,0 +1,128 @@
+{
+  "collapse-filter": true,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "tag:#decision",
+      "color": {
+        "a": 1,
+        "rgb": 16576010
+      }
+    },
+    {
+      "query": "tag:#concept",
+      "color": {
+        "a": 1,
+        "rgb": 62463
+      }
+    },
+    {
+      "query": "tag:#reference",
+      "color": {
+        "a": 1,
+        "rgb": 9417727
+      }
+    },
+    {
+      "query": "tag:#moc",
+      "color": {
+        "a": 1,
+        "rgb": 16738815
+      }
+    },
+    {
+      "query": "tag:#archive",
+      "color": {
+        "a": 1,
+        "rgb": 10987442
+      }
+    },
+    {
+      "query": "path:\"08-Archive\"",
+      "color": {
+        "a": 1,
+        "rgb": 10987442
+      }
+    },
+    {
+      "query": "path:\"Templates\"",
+      "color": {
+        "a": 1,
+        "rgb": 9079449
+      }
+    },
+    {
+      "query": "path:\"01-Projects\"",
+      "color": {
+        "a": 1,
+        "rgb": 16711935
+      }
+    },
+    {
+      "query": "path:\"02-Areas\"",
+      "color": {
+        "a": 1,
+        "rgb": 62463
+      }
+    },
+    {
+      "query": "path:\"03-Resources\"",
+      "color": {
+        "a": 1,
+        "rgb": 9417727
+      }
+    },
+    {
+      "query": "path:\"04-Content\"",
+      "color": {
+        "a": 1,
+        "rgb": 393121
+      }
+    },
+    {
+      "query": "path:\"05-Dashboards\"",
+      "color": {
+        "a": 1,
+        "rgb": 8726271
+      }
+    },
+    {
+      "query": "path:\"06-Canvases\"",
+      "color": {
+        "a": 1,
+        "rgb": 8726271
+      }
+    },
+    {
+      "query": "path:\"07-Daily\"",
+      "color": {
+        "a": 1,
+        "rgb": 16754784
+      }
+    },
+    {
+      "query": "path:\"09-Attachments\"",
+      "color": {
+        "a": 1,
+        "rgb": 9079449
+      }
+    }
+  ],
+  "collapse-display": true,
+  "showArrow": true,
+  "textFadeMultiplier": -1,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": true,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 200,
+  "scale": 0.37901885432962745,
+  "close": true
+}

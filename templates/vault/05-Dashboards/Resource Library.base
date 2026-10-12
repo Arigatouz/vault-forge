@@ -1,0 +1,39 @@
+filters:
+  and:
+    - 'type == "resource"'
+    - not:
+        - file.inFolder("Templates")
+
+formulas:
+  stale_days: 'if(review_date, (today() - date(review_date)).days, "")'
+  link: 'if(source_url, link(source_url, "source"), "")'
+
+properties:
+  source_url:
+    displayName: "Source"
+  confidence:
+    displayName: "Conf."
+  formula.stale_days:
+    displayName: "Days past review"
+
+views:
+  - type: table
+    name: "By confidence"
+    groupBy:
+      property: confidence
+      direction: ASC
+    order:
+      - file.name
+      - area
+      - source
+      - confidence
+      - updated
+
+  - type: list
+    name: "Publishable"
+    filters:
+      and:
+        - 'publishable == true'
+    order:
+      - file.name
+      - area

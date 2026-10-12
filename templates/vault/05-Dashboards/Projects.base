@@ -1,0 +1,52 @@
+filters:
+  and:
+    - 'type == "project"'
+    - not:
+        - file.inFolder("Templates")
+        - file.inFolder("08-Archive")
+
+formulas:
+  status_icon: 'if(status == "active", "🟢", if(status == "paused", "🟡", if(status == "done", "✅", "⚪")))'
+  days_idle: '(now() - file.mtime).days'
+
+properties:
+  next_action:
+    displayName: "Next action"
+  formula.status_icon:
+    displayName: ""
+  formula.days_idle:
+    displayName: "Days idle"
+
+views:
+  - type: table
+    name: "Active"
+    filters:
+      and:
+        - 'status == "active"'
+    order:
+      - file.name
+      - formula.status_icon
+      - area
+      - priority
+      - next_action
+      - due
+      - formula.days_idle
+
+  - type: cards
+    name: "All projects"
+    order:
+      - file.name
+      - status
+      - area
+      - priority
+
+  - type: table
+    name: "By area"
+    groupBy:
+      property: area
+      direction: ASC
+    order:
+      - file.name
+      - status
+      - priority
+      - updated
