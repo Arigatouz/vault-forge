@@ -2,6 +2,11 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
+import tempfile
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from . import util
@@ -9,6 +14,59 @@ from .util import info, warn
 
 REQUIRED = ("manifest.json", "main.js")
 OPTIONAL = ("styles.css",)
+RELEASE_ASSETS = ("manifest.json", "main.js", "styles.css")
+
+
+def fetch_release(spec: str, dest: Path) -> str:
+    """Download a release's install assets into dest. spec is owner/repo or owner/repo@tag.
+
+    Uses the gh CLI when it is installed (which also covers private repos), and falls back to the
+    public release API over plain HTTP so no tooling is required for a public repo.
+    Returns which transport actually delivered the files.
+    """
+    owner_repo, _, tag = spec.partition("@")
+    owner_repo = owner_repo.strip()
+    if owner_repo.count("/") != 1:
+        util.die("--from-github wants owner/repo or owner/repo@tag, got %r" % spec)
+    dest.mkdir(parents=True, exist_ok=True)
+    errors = []
+
+    if shutil.which("gh"):
+        args = ["gh", "release", "download"]
+        if tag:
+            args.append(tag)
+        args += ["--repo", owner_repo, "--dir", str(dest), "--clobber"]
+        for asset in RELEASE_ASSETS:
+            args += ["--pattern", asset]
+        result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0 and (dest / "manifest.json").exists():
+            return "gh release download"
+        errors.append("gh: %s" % result.stderr.decode("utf-8", "replace").strip()[:200])
+
+    api = "https://api.github.com/repos/%s/releases/%s" % (
+        owner_repo, ("tags/" + tag) if tag else "latest")
+    try:
+        request = urllib.request.Request(api, headers={"User-Agent": "vault-forge"})
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        wanted = {asset["name"]: asset["browser_download_url"]
+                  for asset in payload.get("assets", [])}
+        if "manifest.json" not in wanted:
+            util.die("%s has no manifest.json asset on its latest release; nothing to install"
+                     % owner_repo)
+        for name in RELEASE_ASSETS:
+            if name not in wanted:
+                warn("release has no %s asset" % name)
+                continue
+            request = urllib.request.Request(wanted[name], headers={"User-Agent": "vault-forge"})
+            with urllib.request.urlopen(request, timeout=30) as response:
+                (dest / name).write_bytes(response.read())
+        return "public release API"
+    except (urllib.error.URLError, ValueError, TimeoutError) as exc:
+        errors.append("http: %s" % exc)
+    util.die("could not fetch a release for %s: %s" % (owner_repo, "; ".join(errors)))
+    return ""  # unreachable
+
 
 
 def default_source(cfg: dict, repo: Path):
@@ -33,7 +91,18 @@ def plugin_dir(repo: Path, cfg: dict) -> Path:
 def install(repo: Path, cfg: dict, args) -> int:
     plugin_id = getattr(args, "id", "") or (cfg.get("plugin") or {}).get("id", "agent-dispatch")
     cfg.setdefault("plugin", {})["id"] = plugin_id
-    source = Path(args.source).expanduser() if getattr(args, "source", "") else default_source(cfg, repo)
+    from_github = (getattr(args, "from_github", "") or "").strip()
+    if from_github and getattr(args, "source", ""):
+        util.die("pass either --source or --from-github, not both")
+    if from_github:
+        source = Path(tempfile.mkdtemp(prefix="vault-forge-release-"))
+        transport = fetch_release(from_github, source)
+        info("fetched %s via %s" % (from_github, transport))
+        cfg.setdefault("plugin", {})["release"] = from_github
+    elif getattr(args, "source", ""):
+        source = Path(args.source).expanduser()
+    else:
+        source = default_source(cfg, repo)
     if source is None:
         util.die("no add-on source found; pass --source /path/to/agent-dispatch or set "
                  "plugin.source in .vault-forge/forge.json")

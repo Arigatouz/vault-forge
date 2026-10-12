@@ -45,7 +45,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("plugin", help="install or inspect the local Obsidian add-on")
     plugin_sub = p.add_subparsers(dest="plugin_command")
     install = plugin_sub.add_parser("install")
-    install.add_argument("--source", default="", help="path to the add-on repository")
+    install.add_argument("--source", default="", help="path to a built add-on directory")
+    install.add_argument("--from-github", default="",
+                         help="owner/repo or owner/repo@tag, e.g. Arigatouz/agent-dispatch")
     install.add_argument("--id", default="")
     plugin_sub.add_parser("status")
 

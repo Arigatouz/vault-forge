@@ -11,7 +11,7 @@
   },
   "plugin": {
     "id": "agent-dispatch",
-    "source": "/Users/alig/Ali-work/public-projects/agent-dispatch"
+    "source": "/path/to/agent-dispatch"
   },
   "env_var": "PROJECT_VAULT_PATH"
 }

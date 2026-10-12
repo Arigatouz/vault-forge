@@ -90,7 +90,24 @@ rm "docs-vault/03-Resources/Broken.md"
 grep -q '"fake-addon"' docs-vault/.obsidian/community-plugins.json && pass "add-on listed in community-plugins.json" \
   || fail "add-on listed in community-plugins.json"
 
-# 8. final gate
+# 8. the npx launcher and the GitHub install path
+node "$ROOT/bin/vault-forge.js" --version >"$WORK/launcher.log" 2>&1 && pass "node launcher runs the engine" \
+  || fail "node launcher runs the engine"
+grep -q "vault-forge " "$WORK/launcher.log" && pass "launcher reports the version" || fail "launcher reports the version"
+if node "$ROOT/bin/vault-forge.js" plugin install --from-github no-slash-value >"$WORK/badspec.log" 2>&1; then
+  fail "a malformed --from-github spec is refused"
+else
+  pass "a malformed --from-github spec is refused"
+fi
+grep -q "owner/repo" "$WORK/badspec.log" && pass "the refusal names the expected form" \
+  || fail "the refusal names the expected form"
+if "$ROOT/vault-forge" plugin install --source "$WORK/fake-addon" --from-github Arigatouz/agent-dispatch >"$WORK/both.log" 2>&1; then
+  fail "--source and --from-github together are refused"
+else
+  pass "--source and --from-github together are refused"
+fi
+
+# 9. final gate
 "$ROOT/vault-forge" validate >"$WORK/final.log" 2>&1 && pass "final validate exits 0" || fail "final validate exits 0"
 
 echo

@@ -6,7 +6,7 @@ One page, four steps, for any repository on this machine. Replace `<repo>` and `
 
 ```bash
 git -C /path/to/vault-forge pull    # get the latest tool
-bash /path/to/vault-forge/tests/selftest.sh   # optional, 26 checks
+bash /path/to/vault-forge/tests/selftest.sh   # optional, 31 checks
 ```
 
 ## 1. Create the vault inside the project repo
@@ -23,16 +23,24 @@ Existing notes are never overwritten; `--force` re-renders template files only.
 ## 2. Install the add-on (the plugin that fires prompts at coding CLIs)
 
 ```bash
-# once, if it is not built yet
-cd /path/to/agent-dispatch && npm install && npm run build
-
 cd <repo>
-./.vault-forge/vault-forge plugin install --source /path/to/agent-dispatch
+./.vault-forge/vault-forge plugin install --from-github Arigatouz/agent-dispatch
 ```
 
-That copies `manifest.json`, `main.js`, `styles.css` into
-`docs-vault/.obsidian/plugins/agent-dispatch/` and adds `agent-dispatch` to
-`docs-vault/.obsidian/community-plugins.json`, which Obsidian honours on launch. Then, once:
+That downloads the release assets (via the `gh` CLI when installed, otherwise the public release API)
+and copies `manifest.json`, `main.js`, `styles.css` into
+`docs-vault/.obsidian/plugins/agent-dispatch/`, then adds `agent-dispatch` to
+`docs-vault/.obsidian/community-plugins.json`, which Obsidian honours on launch. Pin a release with
+`Arigatouz/agent-dispatch@v0.1.0` if you do not want the moving target.
+
+Building from source instead, when you are the one changing the plugin:
+
+```bash
+cd /path/to/agent-dispatch && npm install && npm run build
+cd <repo> && ./.vault-forge/vault-forge plugin install --source /path/to/agent-dispatch
+```
+
+Then, once:
 
 1. Open the repo's `docs-vault/` folder as a vault in Obsidian (Open folder as vault).
 2. Settings > Community plugins: the plugin appears as installed and enabled, because the registry file

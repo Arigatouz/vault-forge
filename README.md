@@ -7,6 +7,24 @@ knowledge travels with the code and every teammate gets the same thing on clone.
 plugins to work, and everything it writes is plain Markdown, YAML frontmatter and JSON that diffs in a
 pull request.
 
+## Install
+
+```bash
+# run it straight from GitHub, no clone, no install
+npx -y github:Arigatouz/vault-forge init --name "My App"
+npx -y github:Arigatouz/vault-forge build
+npx -y github:Arigatouz/vault-forge search "query"
+
+# or clone it and call the engine directly
+git clone https://github.com/Arigatouz/vault-forge.git ~/tools/vault-forge
+python3 ~/tools/vault-forge/vault-forge build
+```
+
+The npx entry point is a small Node launcher (`bin/vault-forge.js`) over a stdlib-only Python engine, so
+it needs Node 18+ and Python 3.9+ on the machine. Both are present on any dev box; the launcher prints
+install hints and exits 2 if Python is missing. Once `init` has run, always use the vendored copy inside
+the repo (`./.vault-forge/vault-forge`), because that is the version the team pinned.
+
 ## What it produces in a repo
 
 ```
@@ -35,10 +53,10 @@ pull request.
 cd <repo>
 
 # 1. create the vault inside the repo (also vendors the tool into .vault-forge/)
-/path/to/vault-forge init --name "My App"
+npx -y github:Arigatouz/vault-forge init --name "My App"
 
-# 2. install the local add-on that lets the vault fire prompts at coding CLIs
-./.vault-forge/vault-forge plugin install --source /Users/alig/Ali-work/public-projects/agent-dispatch
+# 2. install the local add-on from its GitHub release
+./.vault-forge/vault-forge plugin install --from-github Arigatouz/agent-dispatch
 
 # 3. read the repository and seed the vault, then build the index and run the gate
 ./.vault-forge/vault-forge build
@@ -59,7 +77,7 @@ plus `validate`.
 | `index` | Write `index/vault-index.json`, `index/chunks.jsonl` (heading-level chunks with line ranges) and `index/index.md`. |
 | `search "query"` | Ranked hits as `path:line` plus snippet, with how many query terms matched. `--json` for agents, `--tag` / `--kind` filters. |
 | `validate` | The gate: frontmatter keys and vocabulary, wikilink resolution, orphans, canvas JSON, base YAML, index freshness. Exit code 1 on errors. `--strict` makes orphans errors. |
-| `plugin install` | Copy `manifest.json`, `main.js`, `styles.css` from an add-on repo into the vault and add its id to `community-plugins.json`. Reads the id from the add-on's own manifest. |
+| `plugin install` | Install the Obsidian add-on into the vault, either `--from-github owner/repo[@tag]` (downloads the release assets, via `gh` when present else the public release API) or `--source /path/to/built-addon`. Reads the id from the add-on's own manifest and adds it to `community-plugins.json`. |
 | `build` | `init` + `scan` + `index` + `validate` in one command. |
 | `status` | What this repo has right now: vault path, notes, index state, add-on state. |
 
@@ -114,7 +132,7 @@ Every key is optional. With no `areas`, areas are derived from the top-level sou
 ## Verifying it
 
 ```bash
-bash tests/selftest.sh      # 26 checks: build, scaffolds, evidence, search, idempotency,
+bash tests/selftest.sh      # 31 checks: build, scaffolds, evidence, search, idempotency,
                             # unresolved-link detection, add-on install, final gate
 ```
 

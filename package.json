@@ -1,0 +1,41 @@
+{
+  "name": "vault-forge",
+  "version": "0.2.0",
+  "description": "Generate and maintain a project Obsidian vault inside a repository: scaffold, scan, index, validate.",
+  "keywords": [
+    "obsidian",
+    "vault",
+    "knowledge-base",
+    "agents",
+    "docs",
+    "documentation"
+  ],
+  "license": "MIT",
+  "bin": {
+    "vault-forge": "bin/vault-forge.js"
+  },
+  "files": [
+    "bin/",
+    "vaultforge/",
+    "templates/",
+    "vault-forge",
+    "forge.json.example",
+    "README.md",
+    "docs/"
+  ],
+  "scripts": {
+    "test": "bash tests/selftest.sh",
+    "start": "node bin/vault-forge.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arigatouz/vault-forge.git"
+  }
+}
