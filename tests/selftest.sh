@@ -90,6 +90,30 @@ rm "docs-vault/03-Resources/Broken.md"
 grep -q '"fake-addon"' docs-vault/.obsidian/community-plugins.json && pass "add-on listed in community-plugins.json" \
   || fail "add-on listed in community-plugins.json"
 
+# 7b. a .NET solution with a Makefile: stack, target framework, make targets, build output skipped
+NET="$WORK/dotnet-app"
+mkdir -p "$NET/src/Api/obj/Debug" "$NET/src/Api/bin/Debug"
+printf '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>\n' > "$NET/src/Api/Api.csproj"
+printf 'Microsoft Visual Studio Solution File\n' > "$NET/CompanyAcademy.sln"
+printf 'build:\n\tdotnet build\n\ntest:\n\tdotnet test\n' > "$NET/Makefile"
+printf '# Company Academy\n\nAn internal learning platform with a Socratic AI tutor that teaches\nconcepts and sets exercises for each learner.\n' > "$NET/README.md"
+printf 'public class Program { }\n' > "$NET/src/Api/Program.cs"
+head -c 200000 /dev/urandom | base64 > "$NET/src/Api/obj/Debug/generated.g.cs"
+cd "$NET" && git init -q . && git -c user.email=t@e.com -c user.name=t commit -q --allow-empty -m "chore: init"
+"$ROOT/vault-forge" build >"$WORK/dotnet.log" 2>&1 || fail "dotnet fixture build"
+grep -q "C# / .NET" "$WORK/dotnet.log" && pass "dotnet stack detected" || fail "dotnet stack detected"
+grep -q "skipped:.*bin, obj\|skipped:.*obj" "$WORK/dotnet.log" && pass "dotnet build output skipped" \
+  || fail "dotnet build output skipped"
+grep -q "net10.0" "docs-vault/01-Projects/dotnet-app.md" && pass "target framework read from csproj" \
+  || fail "target framework read from csproj"
+grep -q "make build" "docs-vault/01-Projects/dotnet-app.md" && pass "Makefile targets become commands" \
+  || fail "Makefile targets become commands"
+grep -q "Socratic AI tutor that teaches concepts and sets exercises" "docs-vault/01-Projects/dotnet-app.md" \
+  && pass "README summary keeps the whole paragraph" || fail "README summary keeps the whole paragraph"
+grep -q "obj/Debug\|bin/Debug" "docs-vault/03-Resources/Codebase Map.md" && fail "build output leaked into the map" \
+  || pass "build output stays out of the map"
+cd "$WORK/demo-app"
+
 # 8. the npx launcher and the GitHub install path
 node "$ROOT/bin/vault-forge.js" --version >"$WORK/launcher.log" 2>&1 && pass "node launcher runs the engine" \
   || fail "node launcher runs the engine"

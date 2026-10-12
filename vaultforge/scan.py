@@ -101,11 +101,19 @@ def collect(repo: Path, cfg: dict) -> dict:
             if line.startswith("# "):
                 ev["readme_heading"] = line[2:].strip()
                 break
+        paragraph = []
         for line in lines:
             stripped = line.strip()
-            if stripped and not stripped.startswith(("#", "!", "[", "|", "<")):
-                ev["readme_summary"] = re.sub(r"\s+", " ", stripped)[:400]
-                break
+            if not stripped:
+                if paragraph:
+                    break
+                continue
+            if stripped.startswith(("#", "!", "[", "|", "<")):
+                if paragraph:
+                    break
+                continue
+            paragraph.append(stripped)
+        ev["readme_summary"] = re.sub(r"\s+", " ", " ".join(paragraph))[:400]
 
     ev["git"] = {}
     branch = util.git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
@@ -145,6 +153,18 @@ def collect(repo: Path, cfg: dict) -> dict:
     ev["languages"] = sorted(
         {SOURCE_EXT.get(Path(name).suffix, "") for _s, name in ev["top_files"]} - {""}
     )
+    ev["make_targets"] = []
+    makefile = repo / "Makefile"
+    if makefile.exists():
+        ev["sources"].append("Makefile")
+        text = makefile.read_text(encoding="utf-8", errors="replace")
+        seen = []
+        for match in re.finditer(r"^([A-Za-z0-9][A-Za-z0-9_.-]*):", text, re.M):
+            name = match.group(1)
+            if name not in seen:
+                seen.append(name)
+        ev["make_targets"] = seen[:15]
+
     ev["docs"] = [str(p.relative_to(repo)) for p in sorted((repo / "docs").rglob("*"))
                   if p.is_file()] if (repo / "docs").is_dir() else []
     adr = [n for n in ev["docs"] if re.search(r"adr|decision", n, re.I)]
@@ -226,9 +246,14 @@ def seed(repo: Path, cfg: dict, ev: dict, force: bool = False):
     stack_lines = []
     for label in ev["frameworks"]:
         stack_lines.append("- %s" % label)
+    frameworks_blob = " ".join(ev["frameworks"])
+    skip_languages = {"Markdown", "HTML", "JSON", "TOML", "YAML"}
     for language in ev["languages"]:
-        if language not in ev["frameworks"]:
-            stack_lines.append("- %s" % language)
+        if language in ev["frameworks"] or language in skip_languages:
+            continue
+        if language in frameworks_blob:
+            continue
+        stack_lines.append("- %s" % language)
     if ev.get("dotnet_target"):
         stack_lines.append("- C# / .NET, target framework `%s`" % ev["dotnet_target"])
     if ev.get("dotnet_projects"):
@@ -238,8 +263,11 @@ def seed(repo: Path, cfg: dict, ev: dict, force: bool = False):
     script_rows = ["| Command | What it runs |", "|---|---|"]
     for name, command in list(ev["scripts"].items())[:15]:
         script_rows.append("| `%s` | `%s` |" % (name, str(command)[:90].replace("|", "\\|")))
+    if len(script_rows) == 2 and ev.get("make_targets"):
+        for target in ev["make_targets"]:
+            script_rows.append("| `%s` | `make %s` |" % (target, target))
     if len(script_rows) == 2:
-        script_rows.append("| (none) | no scripts declared |")
+        script_rows.append("| (none) | no scripts and no Makefile targets declared |")
     history = ["- %s" % line for line in ev["git"].get("log", [])[:20]] or ["- no git history found"]
     project_note = "\n".join([
         fm_block("project", "active", primary_area, ["project"], "high",
