@@ -90,10 +90,14 @@ def structure(repo: Path, cfg: dict, force: bool = False):
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
         written.append(".obsidian/%s" % rel)
+    # Never clobber the plugin registry, not even with --force: it is the user's enable list, and
+    # writing [] here silently un-enables every installed add-on on the next launch.
     plugins = vault / ".obsidian" / "community-plugins.json"
-    if not plugins.exists() or force:
+    if not plugins.exists():
         plugins.write_text("[]\n")
         written.append(".obsidian/community-plugins.json")
+    else:
+        kept.append(".obsidian/community-plugins.json")
 
     # note templates, rendered with the project's first area
     vals = values(repo, cfg)

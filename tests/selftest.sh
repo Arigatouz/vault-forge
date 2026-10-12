@@ -157,6 +157,12 @@ else
   pass "--source and --from-github together are refused"
 fi
 
+# 8b. re-running init --force must not un-enable the add-on
+printf '[\n  "fake-addon"\n]\n' > docs-vault/.obsidian/community-plugins.json
+"$ROOT/vault-forge" init --force >"$WORK/reinit.log" 2>&1 || fail "init --force runs"
+grep -q 'fake-addon' docs-vault/.obsidian/community-plugins.json \
+  && pass "init --force keeps the plugin registry" || fail "init --force keeps the plugin registry"
+
 # 9. final gate
 "$ROOT/vault-forge" validate >"$WORK/final.log" 2>&1 && pass "final validate exits 0" || fail "final validate exits 0"
 
