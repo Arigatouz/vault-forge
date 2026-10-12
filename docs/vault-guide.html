@@ -359,10 +359,13 @@ pretending otherwise</td></tr>
 <code>.obsidian/plugins/agent-dispatch/runs/</code>, which Obsidian does not index, so they never pollute the
 vault's search or its graph. Binary paths are resolved per machine: the settings value first, then
 <code>~/.local/bin</code>, Homebrew, <code>/usr/local/bin</code>, then <code>PATH</code>.</p>
-<div class="note warn"><b>If the panel is missing after a restart</b>, the vault's community plugins are off:
-Settings → <em>Community plugins</em> → turn on community plugins, then enable <b>Agent Dispatch</b>. The
-plugin files being present is not the same as the plugin being enabled; the enable list is
-<code>.obsidian/community-plugins.json</code>, which the running app owns.</div>
+<div class="note warn"><b>If the panel is missing</b>, ask the app rather than the files. Community plugins
+can be off for one vault while on for another, and that is per vault, not global. Open Settings →
+<em>Community plugins</em>: if you see the Restricted-mode notice, the plugins are off here. Turn it on,
+enable <b>Agent Dispatch</b>, and confirm the plugin started by looking for
+<code>LOADED.txt</code> next to its <code>main.js</code>. A folder on disk and an entry in
+<code>community-plugins.json</code> are necessary but not sufficient: Obsidian loads only what it considers
+enabled at launch.</div>
 
 <h2 id="git">12. Git rules</h2>
 <table>
@@ -403,10 +406,13 @@ config, snippets, the index, and <code>.obsidian/plugins/agent-dispatch/</code><
 <tr><td>A note shows only a heading and links, no real content</td><td>It is a seeded skeleton note: your
 scanner never read the document or the code behind it</td><td>Run <code>ingest</code> (or
 <code>build</code>) to read the repository's documents and source into notes</td></tr>
-<tr><td>The Agent Dispatch panel is gone after restarting Obsidian</td><td>Community plugins are off for this
-vault, or the enable list was overwritten</td><td>Settings → Community plugins → turn on community plugins →
-enable Agent Dispatch. Check <code>.obsidian/community-plugins.json</code> lists
-<code>"agent-dispatch"</code></td></tr>
+<tr><td>The Agent Dispatch panel is gone, or the command palette finds no "agent dispatch" command</td>
+<td>Community plugins are off <b>for this vault</b>. The switch is per vault, not global, and a plugin
+folder on disk plus an entry in <code>community-plugins.json</code> is not enough: Obsidian only loads what
+it considers enabled</td>
+<td>Settings → Community plugins → turn on community plugins → enable Agent Dispatch. Then confirm it really
+loaded: the plugin writes a <code>LOADED.txt</code> heartbeat next to its <code>main.js</code> when it
+starts</td></tr>
 <tr><td>A dashboard block is empty</td><td>The Base filter does not match any note's properties</td>
 <td>Run <code>validate</code> to find notes with a missing or out-of-vocabulary property, then fix the
 frontmatter</td></tr>

@@ -160,7 +160,11 @@ def install(repo: Path, cfg: dict, args) -> int:
     info("")
     info("The vault folder is inside the repository, so committing it gives every teammate the same")
     info("add-on on clone. Only per-user state stays out (see the vault .gitignore).")
-    info("Loading it in the running app: Settings > Community plugins, or restart Obsidian.")
+    info("")
+    info("REQUIRED ONCE PER VAULT: community plugins must be turned on for THIS vault. Files on disk")
+    info("are not enough, and the toggle is not global: Settings > Community plugins > turn on")
+    info("community plugins, then enable Agent Dispatch. Verify it actually loaded by checking for")
+    info("a LOADED.txt next to the add-on's main.js: it is written by the plugin when it starts.")
     return 0
 
 
