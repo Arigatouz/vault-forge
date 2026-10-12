@@ -62,6 +62,10 @@ def vendor_tool(repo: Path) -> str:
     entry = dest / "vault-forge"
     shutil.copy2(src / "vault-forge", entry)
     entry.chmod(0o755)
+    # the guide travels with the tool, so the repo carries its own documentation offline
+    guide = src / "docs" / "vault-guide.html"
+    if guide.exists():
+        shutil.copy2(guide, dest / "vault-guide.html")
     return str(dest)
 
 
