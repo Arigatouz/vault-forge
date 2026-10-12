@@ -190,8 +190,10 @@ The symptom is precise: the plugin is installed, and Obsidian shows no terminal 
 <h3>Step 7. Point the panel at your CLIs</h3>
 <p>Settings → <b>Agent Dispatch</b>: one binary path per agent (pre-filled by resolution: the settings value,
 then <code>~/.local/bin</code>, Homebrew, <code>/usr/local/bin</code>, then <code>PATH</code>), the model list
-per agent, the default sandbox, the timeout, and the working directory a run starts in. Two settings here
-decide whether a run can do anything at all: <b>Agent mode</b> and <b>extra args</b>, both below. Agents must be
+per agent, the default sandbox, the timeout, and the working directory a run starts in. Three settings here
+decide whether a run can do anything at all: <b>Agent mode</b> (plan, workspace, accept-edits), <b>Allow
+bypass flags</b> (off: bypass flags are refused before spawning), and <b>extra args</b> per agent,
+both below. There is no setting whose purpose is yolo mode. Agents must be
 authenticated themselves; the panel never handles credentials. If a run fails, the card quotes the CLI's own
 words (<code>Not logged in…</code>, <code>You've hit your usage limit…</code>).</p>
 
@@ -527,9 +529,28 @@ in the panel; the agent was correctly blocked by its own permissions.</p>
   <li><b>Frontmatter now says <code>run_status: blocked</code></b> instead of <code>done</code>, and the
   Answer block carries the CLI's own sentence plus the way out, because an empty answer next to exit 0 was
   how a blocked run got filed as a success.</li>
-  <li><b>To let agents act:</b> Settings → Agent Dispatch → <b>Agent mode</b> = <code>accept-edits</code>
-  (claude gets <code>--permission-mode acceptEdits</code>, agy gets <code>--mode accept-edits</code>).
-  The default stays <code>plan</code>, which refuses writes and denies tools.</li>
+  <li><b>To let agents act without a bypass flag:</b> Settings → Agent Dispatch → <b>Agent mode</b> =
+  <code>workspace</code>. That is the contained middle, and each line below was verified live in this
+  vault, on a real directory listing, exit 0:
+  <table>
+  <tr><th>Agent</th><th>argv in workspace mode</th><th>what contains it</th></tr>
+  <tr><td>Codex</td><td><code>-s workspace-write -c approval_policy=never</code></td><td>the OS sandbox: writes
+  are confined to the working directory</td></tr>
+  <tr><td>Claude Code</td><td><code>--permission-mode acceptEdits --permission-prompts none</code></td>
+  <td>edits are auto-approved, and anything that would prompt is denied instead of waiting forever</td></tr>
+  <tr><td>Antigravity</td><td><code>--mode accept-edits --sandbox</code></td><td>edits are auto-approved, the
+  terminal stays restricted by its sandbox</td></tr>
+  <tr><td>OpenCode</td><td>unchanged</td><td>it has no scoped flag at all: its only lever is
+  <code>--auto</code>, which is a bypass, so workspace mode leaves it alone and the note says so</td></tr>
+  </table>
+  The default stays <code>plan</code>, which refuses writes and denies tools. Measured trap: <code>codex
+  exec</code> rejects <code>-a</code>/<code>--ask-for-approval</code> (exit 2, "unexpected argument"), the
+  flag is top-level only, so the approval policy has to go in as a config override.</li>
+  <li><b>Bypass flags are refused, not configured.</b> While <b>Allow bypass flags in extra args</b> is off,
+  a run whose extra args contain <code>--dangerously-*</code>, <code>--yolo</code>, <code>--auto</code> or
+  <code>bypassPermissions</code> is stopped before anything is spawned, and the refusal is itself a run
+  record naming the flag. This is deliberate: a paste from a blog post should not be able to remove the
+  guardrails silently. Turning that toggle on is a per-machine decision.</li>
   <li><b>If a CLI still refuses:</b> it needs an allow-rule of its own (agy reads
   <code>permissions.allow</code> in its own <code>settings.json</code>) or the flags it documents for
   unattended runs, which go in that agent's <b>extra args</b> field. Nothing is added for you: passing
@@ -584,6 +605,12 @@ on stderr. Pre-0.1.1 builds dropped that and filed the run as a success</td><td>
 <tr><td>An agent answers with intentions ("I will…") and changes nothing</td><td>It runs in plan mode, or
 it cannot prompt for a tool permission and auto-denied</td><td>Agent mode → <code>accept-edits</code>, and
 an allow-rule for that CLI when it still refuses. Check its stderr, not its tone</td></tr>
+<tr><td>A run says <code>refused: bypass flag</code> and never starts</td><td>Its extra args contain a
+bypass flag and Allow bypass flags is off, which is the default</td><td>Use Agent mode =
+<code>workspace</code> instead, or turn the toggle on deliberately</td></tr>
+<tr><td>Codex exits 2 with "unexpected argument '-a'"</td><td>Approval policies are set with
+<code>-c approval_policy=never</code> on <code>codex exec</code>; <code>-a</code> only exists on the top-level
+command</td><td>Update to v0.1.2+, which does it correctly</td></tr>
 <tr><td>No output at all, exit 0, 0 bytes</td><td>The denial above, with nothing worth printing in plan
 mode</td><td>Same as the previous row. <code>plugin doctor</code> and the note's frontmatter both keep the
 evidence</td></tr>
