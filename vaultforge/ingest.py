@@ -33,9 +33,9 @@ LANG_BY_EXT = {
 }
 
 # kind, name, line, signature
-CS_TYPE = re.compile(r"^\s*(?:\[[^\]]*\]\s*)*(?:public|internal|private|protected|file)?[\w\s]*?"
+CS_TYPE = re.compile(r"^[ \t]*(?:\[[^\]]*\][ \t]*)*(?:public|internal|private|protected|file)?[\w \t]*?"
                      r"\b(class|interface|record|enum|struct)\s+([A-Za-z_][\w<>,.]*)", re.M)
-CS_MEMBER = re.compile(r"^\s{2,}(?:public|internal|protected|private)\s+"
+CS_MEMBER = re.compile(r"^[ \t]{2,}(?:public|internal|protected|private)\s+"
                        r"(?:static\s+|async\s+|virtual\s+|override\s+|sealed\s+|partial\s+|readonly\s+)*"
                        r"[\w<>\[\],.?]+\s+([A-Za-z_]\w*)\s*\(", re.M)
 TS_DECL = re.compile(r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?"
@@ -86,9 +86,12 @@ def extract_symbols(text: str, language: str):
             kind = match.group(kind_group)
             name = match.group(name_group)
             line_number = _line_of(text, match.start())
-            line = text.splitlines()[line_number - 1] if text.splitlines() else ""
+            declaration = match.group(0).strip().splitlines()[0]
+            if not declaration.strip():
+                lines = text.splitlines()
+                declaration = lines[line_number - 1] if line_number <= len(lines) else ""
             out.append({"kind": kind.strip(), "name": name, "line": line_number,
-                        "signature": _signature(line)})
+                        "signature": _signature(declaration)})
     out.sort(key=lambda item: (item["line"], item["name"]))
     # one entry per (kind, name, line); methods repeat across overloads at different lines, keep those
     seen, unique = set(), []
@@ -170,7 +173,9 @@ def doc_note_text(path: Path, rel: str, text: str, project: str, area: str) -> s
 def code_label(module: str) -> str:
     """The single canonical name for a module note: filename, heading and wikilink all use it, so
     the link can never disagree with the file it points at."""
-    return ("%s outline" % module).replace("/", "-")
+    tail = module.rsplit("/", 1)[-1]
+    stem = tail if "." in tail else module.replace("/", "-")
+    return ("%s outline" % stem)
 
 
 def code_note_text(module: str, files, area: str, project: str) -> str:
