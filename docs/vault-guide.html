@@ -515,6 +515,30 @@ enable <b>Agent Dispatch</b>, and confirm the plugin started by looking for
 <code>community-plugins.json</code> are necessary but not sufficient: Obsidian loads only what it considers
 enabled at launch.</div>
 
+<h3 id="agy">Making Antigravity (agy) work headless</h3>
+<p>agy has no scoped permission flag; in print mode it <b>soft-denies</b> every tool that is not allow-listed.
+Its own log says it plainly:</p>
+<pre>tool_confirmation_manager.go:212] Print mode: soft-denying tool confirmation "RunCommand" at step 4</pre>
+<p>So the panel's mode is not enough: agy's <code>permissions.allow</code> decides. Rules live in
+<code>~/.gemini/antigravity-cli/settings.json</code> as <code>read_file(…)</code>, <code>write_file(…)</code>,
+<code>command(…)</code> or <code>mcp(…)</code>. A <b>directory</b> target grants recursive access, which is
+what makes a three-rule setup enough. Measured working set for this repo:</p>
+<pre>"permissions": {
+  "allow": [
+    "read_file(/Users/&lt;you&gt;/Luftborn/AI-Tutor-platform/docs-vault)",
+    "write_file(/Users/&lt;you&gt;/Luftborn/AI-Tutor-platform/docs-vault)",
+    "read_file(/Users/&lt;you&gt;/Luftborn/AI-Tutor-platform/docs)"
+  ]}
+</pre>
+<p>Verified with the panel's own argv (<code>--mode accept-edits --sandbox</code>): agy read the README, listed
+the inbox and wrote the note, exit 0, answer
+<code>RESULT: agy | read=yes | list=4 | write=yes</code>. <b>Do not reach for
+<code>--dangerously-skip-permissions</code></b> for this: the panel refuses it, and it is not needed. Two
+caveats worth knowing: <code>command(…)</code> rules match the command text and only what you list is
+approved, so shell work still needs per-command rules; and although directory targets are documented as
+recursive scopes, one measured run with a narrow <code>write_file</code> target still wrote outside it, so
+treat the grant as enabling the tool rather than fencing it.</p>
+
 <h3 id="runs">When a run exits with an error after doing the work</h3>
 <p>Measured on claude, and the cause was the caller, not the CLI. A three-step task read the file, listed the
 folder and wrote the note, then exited <b>1</b> with an empty Answer. Its stream ended with:</p>
@@ -619,6 +643,9 @@ on stderr. Pre-0.1.1 builds dropped that and filed the run as a success</td><td>
 <tr><td>An agent answers with intentions ("I will…") and changes nothing</td><td>It runs in plan mode, or
 it cannot prompt for a tool permission and auto-denied</td><td>Agent mode → <code>accept-edits</code>, and
 an allow-rule for that CLI when it still refuses. Check its stderr, not its tone</td></tr>
+<tr><td>agy says <code>blocked</code> whatever the panel mode is</td><td>Headless print mode soft-denies any
+tool missing from its own allow list</td><td>Add the <code>read_file</code>/<code>write_file</code> directory
+rules above. See the agy section</td></tr>
 <tr><td>A run exits with an error, the Answer is empty, and the work was actually done</td><td>The run hit
 its turn limit (<code>error_max_turns</code>) and had no final message to return</td><td>Update to v0.1.4+: the
 note now reads <i>ran out of turns</i>. Raise <b>Max turns per run</b>, then verify what it finished</td></tr>
