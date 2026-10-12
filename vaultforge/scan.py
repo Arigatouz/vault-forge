@@ -9,6 +9,9 @@ from pathlib import Path
 from . import util
 from .util import info, warn
 
+# Build output and caches that never belong in a vault note. Applied on top of the configured list.
+DOTNET_EXCLUDE = {"bin", "obj", ".vs", "TestResults", "artifacts", "packages"}
+
 SOURCE_EXT = {
     ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript", ".jsx": "JavaScript",
     ".rs": "Rust", ".py": "Python", ".go": "Go", ".java": "Java", ".cs": "C#",
@@ -34,9 +37,9 @@ AREA_TITLES = {
 }
 
 
-def _excluded(rel: Path, cfg) -> bool:
+def _excluded(rel: Path, cfg, extra=None) -> bool:
     parts = set(rel.parts)
-    if parts & set(cfg["scan"]["exclude"]) or ".vault-forge" in parts:
+    if parts & set(cfg["scan"]["exclude"]) or parts & set(extra or ()) or ".vault-forge" in parts:
         return True
     if any(p.startswith(".") for p in rel.parts):
         return True
@@ -65,8 +68,28 @@ def collect(repo: Path, cfg: dict) -> dict:
     if (repo / "src-tauri" / "Cargo.toml").exists() or list(repo.glob("Cargo.toml")):
         ev["frameworks"].append("Rust")
         ev["sources"].append("Cargo.toml")
+    ev["dotnet_target"] = ""
+    ev["dotnet_projects"] = []
+    solutions = list(repo.glob("*.sln"))
+    projects = sorted(
+        {p for depth in ("*/*.csproj", "*/*/*.csproj", "*/*/*/*.csproj") for p in repo.glob(depth)}
+    )
+    if solutions or projects:
+        ev["frameworks"].append("C# / .NET")
+        ev["sources"].append(solutions[0].name if solutions else "a .csproj file")
+        ev["dotnet_projects"] = [p.stem for p in projects][:12]
+        for candidate in projects[:6]:
+            match = re.search(r"<TargetFramework>([^<]+)</TargetFramework>", candidate.read_text(
+                encoding="utf-8", errors="replace"))
+            if match:
+                ev["dotnet_target"] = match.group(1).strip()
+                break
     if (repo / "pyproject.toml").exists():
         ev["sources"].append("pyproject.toml")
+
+    # .NET build output stays out of the notes: bin/ and obj/ are generated, not source.
+    extra = DOTNET_EXCLUDE if "C# / .NET" in ev["frameworks"] else set()
+    ev["dotnet_excluded"] = sorted(extra) if extra else []
 
     readme = repo / "README.md"
     ev["readme_heading"] = ""
@@ -102,7 +125,7 @@ def collect(repo: Path, cfg: dict) -> dict:
             rel = path.relative_to(repo)
         except ValueError:
             continue
-        if _excluded(rel, cfg):
+        if _excluded(rel, cfg, extra):
             continue
         if path.is_dir():
             if len(rel.parts) <= 2:
@@ -206,6 +229,10 @@ def seed(repo: Path, cfg: dict, ev: dict, force: bool = False):
     for language in ev["languages"]:
         if language not in ev["frameworks"]:
             stack_lines.append("- %s" % language)
+    if ev.get("dotnet_target"):
+        stack_lines.append("- C# / .NET, target framework `%s`" % ev["dotnet_target"])
+    if ev.get("dotnet_projects"):
+        stack_lines.append("- Projects: %s" % ", ".join("`%s`" % n for n in ev["dotnet_projects"]))
     if not stack_lines:
         stack_lines.append("- (no package manifest found; stack not detected)")
     script_rows = ["| Command | What it runs |", "|---|---|"]
@@ -429,6 +456,8 @@ def scan(repo: Path, cfg: dict, args) -> int:
     info("  areas:    %s" % ", ".join(areas))
     info("  tags:     %s" % ", ".join(tags))
     info("  commits:  %d read, HEAD %s" % (len(ev["git"].get("log", [])), ev["git"].get("head", "-")))
+    if ev.get("dotnet_excluded"):
+        info("  skipped:  %s (dotnet build output)" % ", ".join(ev["dotnet_excluded"]))
     info("  wrote:    %d notes" % len(written))
     if kept:
         info("  kept:     %d existing notes untouched (use --force to re-seed)" % len(kept))
